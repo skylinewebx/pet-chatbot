@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Embed example – any website</title>
+  <style>
+    body { margin: 0; font: 16px/1.6 Georgia, serif; background: #ffffff; color: #222; }
+    main { max-width: 640px; padding: 48px 20px; margin: 0 auto; }
+    code { background: #f3f0ea; padding: 2px 6px; border-radius: 6px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Any website</h1>
+    <p>This page shows the chatbot added with a single line. Its styles live inside a Shadow DOM, so they never clash with the host page.</p>
+    <p><code>&lt;script src="https://YOUR-SITE.netlify.app/chatbot.js" data-name="Business Name"&gt;&lt;/script&gt;</code></p>
+  </main>
+
+  <script src="chatbot.js" data-name="Sunny Paws Grooming"></script>
+</body>
+</html>

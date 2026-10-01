@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+  command = ""
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+    Access-Control-Allow-Origin = "*"
