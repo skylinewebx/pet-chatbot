@@ -1,6 +1,6 @@
 # 🐾 PawCare AI Assistant
 
-A cute AI chatbot for the fictional **PawCare Pet Clinic & Grooming**. It answers questions and books grooming and vet visits. It runs **free, with no API key**: a rule-based engine handles synonyms, typos, slang (tmrw, pls, u, appt, eve…), scoring and validation, so it works on any static host.
+A cute AI chatbot for the fictional **PawCare Pet Clinic & Grooming** (42 Maple Lane, Austin, TX). It answers questions and books grooming and vet visits. It runs **free, with no API key**: a rule-based engine handles synonyms, typos, slang (tmrw, pls, u, appt, eve…), scoring and validation, so it works on any static host.
 
 **Files**
 
@@ -8,10 +8,10 @@ A cute AI chatbot for the fictional **PawCare Pet Clinic & Grooming**. It answer
 |---|---|
 | `index.html` | Demo page. The chat opens automatically, and an **Owner view** panel lists received bookings |
 | `chatbot.js` | Engine + widget (Shadow DOM). Also works as a one-line embed |
-| `config.js` | All business data: contact details, hours, services, prices and 60+ Q&A entries |
+| `config.js` | All business data: contact details, hours, services, US-dollar prices and 110 Q&As |
 | `netlify.toml` | Netlify config (`publish = "."`) |
 | `embed-example.html` | Shows the one-line embed on a plain website |
-| `tests/run.js` | 14 scripted conversations with 75 checks (`node tests/run.js`) |
+| `tests/hard.js` | 282 automated checks over 200+ customer messages (`node tests/hard.js`) |
 | `tests/explore.js` | Extra transcripts for a quick read-through |
 
 ## Run locally
@@ -44,24 +44,28 @@ Then visit http://localhost:8765.
 `?name=&city=&phone=` override the defaults everywhere: header, welcome, replies and the tab title.
 
 ```
-https://YOUR-SITE.netlify.app/?name=Happy%20Tails%20Vet&city=Pune&phone=%2B91%2090000%2011111
+https://YOUR-SITE.netlify.app/?name=Happy%20Tails%20Vet&city=Denver,%20CO&phone=(303)%20555-0110
 ```
 
-## Features
+## How it behaves
 
-- **Message batching**: replies wait 4 s after the last message *or keystroke*, then answer everything in one reply (tested with 2–20 messages). A "Seen" tick appears instantly.
-- **Typing pet**: instead of three dots, a tiny line-art dog or cat wiggles while the bot replies, grows with a bounce, and the message pops out of it.
-- **Booking flow**: asks one thing at a time (city → pet → breed → name → age → need → history), tells the matching services and prices in plain text, then date (chips) → time (chips, taken slots crossed out, nearest free slots offered) → owner name → "What's the best way to reach you: phone, email, or both?" → summary card with **Edit / Confirm** → warm closing → **Add to Calendar** (.ics).
-- **Extracts everything** from any message (one long message can complete a whole booking), supports **multiple pets** with different services in one combined summary, and understands **changes** at any point ("actually make it Friday at 4", "change his name to Rocco").
-- **Validation** of name, phone, email, date and time: impossible dates (31 Feb), past dates, Sundays, out-of-hours times. The first mistake gets a detailed, friendly hint with an example; later mistakes get short, varied replies; from the 3rd mistake the clinic phone is offered too.
-- **Safety**: never diagnoses, suggests or doses medicine. Emergencies start with *"Please take your pet to the nearest emergency vet right away."*, then the emergency number, then the earliest appointment. Questions about medicine, allergies or a pet's pregnancy get *"Our vet will guide you on that during your visit"* plus the clinic phone.
+- **Short, clean replies**: one to three short sentences. Location, hours and pickup are one line each; prices are a short list ("Basic Bath: from $30"). All prices are in US dollars.
+- **Quick-reply bar** that is always visible (Book a visit, Book an appointment, Services & prices, Opening hours, Location, Home pickup, Emergency). Buttons lift and glow on hover, press down on tap, and work every time, in any order (one delegated click handler).
+- **Typing puppy**: a small full-body puppy bounces gently, blinks and wags its tail while the bot replies, then grows big with a bounce and the message pops out of it.
+- **Four corner pets** (a napping cat, a peeking puppy, a sitting cat and a sitting dog) in line art on the chat window's corners, hidden on mobile.
+- **Message batching**: replies wait 4 s after the last message *or keystroke*, then answer everything in one reply. A "Seen" tick appears instantly.
+- **"Book a visit"** gives the address, invites people to drop by during opening hours, and asks "Would you like to book an appointment as well?"
+- **Appointment flow**, one question at a time and never asked twice: pet type → breed → name and age → what they need → vet/groomer history → price in one line → day (chips) and time (slot chips, taken slots crossed out, nearest free slots offered) → home pickup (yes/no) → owner name → phone, email or both → summary card with **Edit / Confirm**. It never asks for the city. One-word answers ("dog", "tomorrow", "Karachi") are treated as answers to the current question only.
+- **Closing**: "Lovely to meet you and Bruno, Priya! Your booking is confirmed for Friday, October 2 at 5:00 PM. We can't wait to see you both. Take care, and have a wonderful day! 🐾", then **Add to Calendar** (.ics) and one "Is there anything else I can help you with?". On no/thanks/bye: a short goodbye, then silence.
+- **Validation** of name, phone (US 10-digit or +international), email, date and time, with friendly first hints, short varied follow-ups, and the clinic phone from the 3rd mistake.
+- **Safety**: never diagnoses, suggests or doses medicine. Emergencies start with *"Please take your pet to the nearest emergency vet right away."*, then the emergency line, then the earliest appointment. Questions about medicine, allergies or a pet's pregnancy get *"Our vet will guide you on that during your visit."*
 - **Scope**: off-topic requests and prompt injection get the fixed out-of-scope reply, and gibberish gets the rephrase reply.
-- Quick-reply buttons for common questions (never for services), **Start new chat**, timestamps, chat kept in `sessionStorage`, and bookings stored in `localStorage` for the Owner view.
+- Start new chat, timestamps, chat kept in `sessionStorage`, and bookings stored in `localStorage` for the Owner view.
 - Mobile: full screen under 560 px with a clear ✕, keeps the input above the keyboard (`visualViewport`), 16 px input text, buttons ≥ 44 px, no sideways scroll.
 
 ## Customise
 
-Edit `config.js`: business details, hours (`openDays`, `openTime`, `lastSlot`), `services` (prices for small / medium / large pets, keywords) and the `qa` list. Each Q&A entry has keyword groups (`req`); every group must match. `word*` matches any ending.
+Edit `config.js`: business details, hours (`openDays`, `openTime`, `lastSlot`), `homePickup`, `services` (prices for small / medium / large pets, keywords), `quickReplies` and the `qa` list. Each Q&A entry has keyword groups (`req`), and every group must match; `word*` matches any ending. `boost` raises an entry's priority and `fallback` makes it answer only when nothing more specific matches.
 
 ## Plug in Claude later
 
@@ -80,7 +84,7 @@ Search `chatbot.js` for **`🔌 CLAUDE API HOOK`**. `getBotReply()` is the singl
 ## Tests
 
 ```bash
-node tests/run.js         # full transcripts + checks
-node tests/run.js --quiet # summary only
-node tests/explore.js     # extra transcripts
+node tests/hard.js            # 282 checks: relevance, length, English, dollars, no repeats
+node tests/hard.js --verbose  # every message and reply
+node tests/explore.js         # extra transcripts
 ```

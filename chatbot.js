@@ -41,6 +41,7 @@
   /* Function words: a "name" may never contain these. */
   var STOP = toSet('a an the and or but if then so to of in on at by for with from into about as is am are was were be been do does did have has had i me my we us our you your he him his she her it its they them their this that these those there here what which who when where why how all any both no not only can will just should would could may might must please hi hello hey okay ok yes yeah yep sure thanks thank im ive id dont cant wont lets want need like know think tell say go come make take see look also too very really much many some more most get got bye nope nah');
 
+  var NAMEY_CITIES = toSet('austin paris sydney boston london chicago madison jackson charlotte florence georgia savannah phoenix dallas brooklyn');
   var BAD_NAME = toSet('book booking appointment appt bath baths groom grooming groomer haircut nail nails trim spa checkup vaccine vaccines vaccination dog dogs cat cats puppy kitten pet pets bird rabbit phone email both number call text whatsapp mobile tomorrow today tonight monday tuesday wednesday thursday friday saturday sunday morning evening afternoon time date service services name cancel change edit confirm help price prices cost hours open closed slot visit clinic vet doctor emergency nothing none fine good great cool nice yes no ok okay thanks hello hey hi sure correct done');
 
   var SLANG = {
@@ -79,9 +80,11 @@
     confirmYes: /^ (yes|yeah|yep|yup|confirm|confirmed|correct|looks good|looks great|all good|perfect|book it|go ahead|thats right|that is right|right|ok|okay|sure|done|great|lovely|absolutely|sounds good|all correct|yes confirm|please confirm|confirm it|confirm booking|confirm the booking)( |$)/,
     edit: /^ (edit|no|nope|change|modify|wrong|incorrect|not right|wait)( |$)| (edit|change something|make a change|something is wrong|not correct)( |$)/,
     change: / (change|changed|update|edit|modify|switch|instead|actually|wrong|incorrect|correction|not right|i meant|sorry|make it|move it|rather|scratch that|oops|not a|no its|no it is|no hes|no shes)( |$)/,
-    book: / (book|booking|appointment|appointments|schedule|reserve|reservation|slot|slots|bring (him|her|them|my|our|it)|come in|book a visit)( |$)/,
-    price: / (how much|price|prices|pricing|cost|costs|costing|rate|rates|charge|charges|fee|fees|rupees|rs|expensive|cheap|affordable|quote|estimate|tariff)( |$)/,
-    servicesList: / ((what|which) (services|treatments|grooming services)|services (do you|you) (offer|provide|have)|what do you offer|what do you provide|list of services|your services|services list|rate card|price list|all (your )?prices|full list|menu)( |$)|^ (prices?|services|pricing|rates)( please)? $/,
+    book: / (book|booking|appointment|appointments|schedule|reserve|reservation|slot|slots|bring (him|her|them|my|our|it)|come in)( |$)/,
+    visit: /^ (book a visit|i want to visit|i would like to visit|id like to visit|want to visit|can i visit|could i visit|visit you|visit|visiting|come visit|come by|drop by|stop by|pop in|i want to come|can i come|can i come by|can i drop by)( (you|the clinic|your clinic|today|please))?( please)? $/,
+    yesish: /^ (yes|yeah|yep|yup|ya|sure|ok|okay|alright|please|yes please|please do|definitely|of course|absolutely|i do|i would|that would be great|sounds good|why not|need it|yes i do)( |$)/,
+    price: / (how much|price|prices|pricing|cost|costs|costing|rate|rates|charge|charges|fee|fees|dollars|bucks|expensive|cheap|affordable|quote|estimate|tariff)( |$)/,
+    servicesList: / ((what|which) (services|treatments|grooming services)|services (do you|you) (offer|provide|have)|what (do|can) you (offer|provide|do)|what (else )?do you guys do|tell me (about|more about) (your |the )?(services|clinic|business|what you do|prices)|about your services|list (of )?(your )?services|your services|services list|rate card|price list|all (your )?prices|full list|menu|services and prices|services prices|what you offer|what services)( |$)|^ (prices?|services?|pricing|rates|price list|services (and|&) prices|service list)( please)? $/,
     duration: / (how long|how much time|duration|how many hours|how many minutes)( |$)/,
     avail: / (available|availability|free|any slots?|slots|space|openings?|room)( |$)/,
     staffNames: / ((who are|names? of|name of|list) (your |the |all )?(vets?|groomers?|doctors?|staff|team|stylists?)|(vets?|groomers?|doctors?|staff) names?)( |$)/,
@@ -90,7 +93,8 @@
     anxious: / (anxious|nervous|scared|afraid|fearful|timid|shy|stressed|panics|hates (being )?groom\w*|hates baths?)( |$)/,
     bites: / (bites|biting|bite|aggressive|snaps|snapping|growls|reactive)( |$)/,
     firstTime: / (first time|no history|no past visits?|none before|never before|no previous( visits?)?|no prior( visits?)?|never visited|not been before|never been|never groomed|never had|not been groomed|hasnt been|has not been|first ever|no not yet|not yet|never seen|first visit|new to)( |$)/,
-    history: / (last time|last visit|previous groomer|previously|before at|was groomed|had a bad experience|bad experience|used to go|went to|last month|last year|last week|weeks ago|months ago|years ago|another groomer|other groomer|another vet|other vet|our vet|his vet|her vet|regular vet)( |$)/,
+    history: / (seen before|been seen|been before|groomed before|been groomed|visited before|last time|last visit|previous groomer|previously|before at|was groomed|had a bad experience|bad experience|used to go|went to|last month|last year|last week|weeks ago|months ago|years ago|another groomer|other groomer|another vet|other vet|our vet|his vet|her vet|regular vet)( |$)/,
+    shortQ: /^ (hours|opening hours|timings?|open|location|address|where|services?|prices?|pricing|rates|price list|pickup|home pickup|emergency|parking|payment|contact|phone number|services prices)( please)? $/,
     qword: /^ (what|whats|how|hows|when|where|wheres|why|which|who|can|could|do|does|did|is|are|will|would|should|shall|may|any|is there|are there|tell me|explain|whether)( |$)/,
     earliest: / (earliest|soonest|first available|first free|next available|any day|anytime|any time|whenever|as soon as possible)( |$)/,
     notSure: /^ (not sure|dont know|do not know|no idea|unsure|unknown|dont remember|cant remember|im not sure|i am not sure|no clue|maybe)( |$)/
@@ -113,8 +117,15 @@
     if (arr.length === 2) return arr[0] + ' ' + word + ' ' + arr[1];
     return arr.slice(0, -1).join(', ') + ' ' + word + ' ' + arr[arr.length - 1];
   }
+  function sentences(t) { return (String(t).match(/[.!?](\s|$)/g) || []).length; }
+  /* Keep only the actual question: "We're open …. Which day?" → "Which day?" */
+  function shortQ(p) {
+    var bits = String(p).match(/[^.!?]+[.!?]+/g) || [p];
+    var q = bits.filter(function (b) { return /\?\s*$/.test(b); })[0] || bits[bits.length - 1];
+    return q.trim();
+  }
   function art(w) { return /^[aeiou]/i.test(w) ? 'an' : 'a'; }
-  function inr(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
+  function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
   function hm(str) { var p = str.split(':'); return (+p[0]) * 60 + (+p[1]); }
   function fmtTime(min) {
     var h = Math.floor(min / 60), m = min % 60, ap = h >= 12 ? 'PM' : 'AM', hh = h % 12 || 12;
@@ -124,8 +135,8 @@
   function fromIso(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function addDays(d, n) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
   function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
-  function fmtDate(d) { return DAY_CAP[d.getDay()] + ', ' + d.getDate() + ' ' + MON_CAP[d.getMonth()]; }
-  function fmtDateLong(d) { return DAY_NAMES[d.getDay()].replace(/^./, function (c) { return c.toUpperCase(); }) + ', ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]) + ' ' + d.getFullYear(); }
+  function fmtDate(d) { return DAY_CAP[d.getDay()] + ', ' + MON_CAP[d.getMonth()] + ' ' + d.getDate(); }
+  function fmtDateLong(d) { return cap(DAY_NAMES[d.getDay()]) + ', ' + cap(MONTHS[d.getMonth()]) + ' ' + d.getDate(); }
   function hash(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
   /* Damerau (OSA) distance with an early exit. */
@@ -168,7 +179,7 @@
     [/ e mail /g, ' email '], [/ a m /g, ' am '], [/ p m /g, ' pm '], [/ (\d{1,2}) ?a\.?m /g, ' $1am '], [/ (\d{1,2}) ?p\.?m /g, ' $1pm '],
     [/ (\d{1,2})(am|pm) /g, ' $1 $2 '], [/ (\d{1,2}:\d{2})(am|pm) /g, ' $1 $2 '], [/ (\d{1,2}\.\d{2})(am|pm) /g, ' $1 $2 '],
     [/ y o /g, ' yo '], [/ guineapig/g, ' guinea pig'], [/ walkin /g, ' walk in '], [/ pick up /g, ' pickup '], [/ ok ok /g, ' okay '],
-    [/ day after tmrw /g, ' day after tomorrow '], [/ shihtzu /g, ' shih tzu ']
+    [/ day after tmrw /g, ' day after tomorrow '], [/^ were (are|is) /g, ' where $1 '], [/ shihtzu /g, ' shih tzu ']
   ];
 
   /* =====================================================================
@@ -203,7 +214,7 @@
     };
   };
   Engine.prototype.freshBooking = function () {
-    return { active: false, pets: [], city: null, date: null, time: null, pendingTime: null, timePref: null, ownerName: null, contact: null, phone: null, email: null, history: null, notes: [], staff: null, pickup: false, told: false, summaryShown: false };
+    return { active: false, pets: [], city: null, date: null, time: null, pendingTime: null, timePref: null, ownerName: null, contact: null, phone: null, email: null, history: null, notes: [], staff: null, pickup: null, told: false, summaryShown: false };
   };
   Engine.prototype.serialize = function () { return JSON.parse(JSON.stringify(this.state)); };
   Engine.prototype.restore = function (st) { if (st && st.b) this.state = st; };
@@ -219,7 +230,8 @@
     function addStem(kw) {
       if (/\*$/.test(kw)) {
         var stem = kw.replace(/\*$/, '').split(' ').pop();
-        ['', 's', 'ing', 'ed', 'er', 'ers', 'es'].forEach(function (suf) { if ((stem + suf).length >= 3) vocab[stem + suf] = 1; });
+        if (stem.length >= 4) ['', 's', 'ing', 'ed', 'er', 'ers', 'es'].forEach(function (suf) { vocab[stem + suf] = 1; });
+        else vocab[stem] = 1;
       }
     }
     // Q&A
@@ -258,6 +270,7 @@
     // date / intent words
     MONTHS.concat(DAY_NAMES).forEach(function (w) { vocab[w] = 1; });
     ('appointment appointments booking book tomorrow today tonight morning afternoon evening emergency breathing bleeding seizure poison poisoned collapsed swollen belly stomach price prices cost cancel change confirm phone email number grooming groomer vaccination available slot slots reschedule hello thanks please veterinarian vet clinic address hours schedule weekend service services checkup haircut nails bath spa puppy kitten pickup parking payment open closed sunday saturday monday information emergency vomiting diarrhea limping medicine allergy allergic pregnant urgent anxious nervous aggressive biting senior shedding matted fleas ticks teeth dental microchip deworming neuter spay vaccine vaccines vaccinated groomed groomers').split(' ').forEach(function (w) { vocab[w] = 1; });
+    ('choking choke gasping breathing breathe poison poisoned poisoning collapsed collapse unconscious fainted bleeding bleed blood seizure seizures seizing convulsing convulsions swollen bloated bloat vomiting vomit diarrhea limping injured injury accident emergency urgent dying edit confirm cancel karachi lahore located location where were weather president').split(' ').forEach(function (w) { vocab[w] = 1; });
     this.vocab = vocab;
     this.vocabList = Object.keys(vocab).filter(function (w) { return w.length >= 4; });
     this.cities = KNOWN_CITIES.slice();
@@ -305,7 +318,10 @@
   Engine.prototype.norm = function (raw) {
     var self = this;
     var s = this.phraseFix(this.slang(baseClean(raw)));
-    s = ' ' + s.trim().split(' ').map(function (t) { return self.correct(t); }).join(' ') + ' ';
+    // Capitalised words after the first word are probably names ("my cat Mittens"): never autocorrect them.
+    var keep = {};
+    (String(raw).match(/[^\s.!?]\s+[A-Z][a-z]{2,}/g) || []).forEach(function (m) { keep[m.replace(/^.\s+/, '').toLowerCase()] = 1; });
+    s = ' ' + s.trim().split(' ').map(function (t) { return keep[t] ? t : self.correct(t); }).join(' ') + ' ';
     return this.phraseFix(this.slang(s));
   };
 
@@ -330,17 +346,17 @@
   /* ---------- prices ---------- */
   Engine.prototype.priceRange = function (id) {
     var s = this.svc[id]; if (!s) return '';
-    if (s.onRequest) return 'from ' + inr(s.from) + ' plus travel';
-    if (s.flat) return inr(s.flat);
-    return inr(s.prices[0]) + '–' + inr(s.prices[2]) + (s.perUnit ? ' ' + s.perUnit : '');
+    if (s.onRequest) return 'from ' + money(s.from) + ' plus travel';
+    if (s.flat) return money(s.flat);
+    return 'from ' + money(s.prices[0]) + (s.perUnit ? ' ' + s.perUnit : '');
   };
   Engine.prototype.svcPrice = function (id, size) {
     var s = this.svc[id];
-    if (s.onRequest) return { lo: s.from, hi: null, text: 'on request, from ' + inr(s.from) + ' plus travel' };
-    if (s.flat) return { lo: s.flat, hi: s.flat, text: inr(s.flat) };
+    if (s.onRequest) return { lo: s.from, hi: null, text: 'on request, from ' + money(s.from) + ' plus travel' };
+    if (s.flat) return { lo: s.flat, hi: s.flat, text: money(s.flat) };
     var idx = { s: 0, m: 1, l: 2 }[size];
-    if (idx !== undefined) return { lo: s.prices[idx], hi: s.prices[idx], text: inr(s.prices[idx]) + (s.perUnit ? ' ' + s.perUnit : '') };
-    return { lo: s.prices[0], hi: s.prices[2], text: inr(s.prices[0]) + '–' + inr(s.prices[2]) + (s.perUnit ? ' ' + s.perUnit : '') + ', depending on size' };
+    if (idx !== undefined) return { lo: s.prices[idx], hi: s.prices[idx], text: money(s.prices[idx]) + (s.perUnit ? ' ' + s.perUnit : '') };
+    return { lo: s.prices[0], hi: s.prices[2], text: 'from ' + money(s.prices[0]) + (s.perUnit ? ' ' + s.perUnit : '') };
   };
   Engine.prototype.petSize = function (p) {
     if (!p) return null;
@@ -523,14 +539,13 @@
   Engine.prototype.validPhone = function (p) {
     var d = p.digits;
     if (/^(\d)\1+$/.test(d) || d === '1234567890' || d === '0123456789') return null;
+    function us(x) { return '(' + x.slice(0, 3) + ') ' + x.slice(3, 6) + '-' + x.slice(6); }
     if (p.plus) {
-      if (/^91/.test(d)) return /^91[6-9]\d{9}$/.test(d) ? '+91 ' + d.slice(2, 7) + ' ' + d.slice(7) : null;
+      if (/^1/.test(d)) return /^1[2-9]\d{2}[2-9]\d{6}$/.test(d) ? us(d.slice(1)) : null;
       return (d.length >= 8 && d.length <= 15) ? '+' + d : null;
     }
-    if (/^[6-9]\d{9}$/.test(d)) return '+91 ' + d.slice(0, 5) + ' ' + d.slice(5);
-    if (/^0[6-9]\d{9}$/.test(d)) return '+91 ' + d.slice(1, 6) + ' ' + d.slice(6);
-    if (/^91[6-9]\d{9}$/.test(d)) return '+91 ' + d.slice(2, 7) + ' ' + d.slice(7);
-    if (/^0[1-9]\d{9}$/.test(d)) return d.slice(0, 3) + ' ' + d.slice(3, 7) + ' ' + d.slice(7);
+    if (/^[2-9]\d{2}[2-9]\d{6}$/.test(d)) return us(d);            // US / Canada 10 digits
+    if (/^1[2-9]\d{2}[2-9]\d{6}$/.test(d)) return us(d.slice(1));  // with leading 1
     return null;
   };
   Engine.prototype.findEmails = function (R, pending) {
@@ -560,6 +575,7 @@
       var w = words[i], lw = w.toLowerCase().replace(/[^a-z]/g, '');
       if (!/^[A-Za-z][A-Za-z.'-]*$/.test(w)) return null;
       if (STOP[lw] || BAD_NAME[lw]) return null;
+      if (this.cities.indexOf(lw) >= 0 && !NAMEY_CITIES[lw]) return null;
       if (strict && (COMMON[lw] || this.vocab[lw])) return null;
       if (KEYMASH.test(lw) || /[bcdfghjklmnpqrstvwxz]{5,}/.test(lw) || (lw.length > 3 && !/[aeiouy]/.test(lw)) || /(.)\1{2,}/.test(lw)) return null;
       if (this.isServiceWord(lw) || this.isPetWord(lw)) return null;
@@ -701,16 +717,15 @@
    * Flow
    * ===================================================================== */
   Engine.prototype.start = function () {
-    return [this.msg('Hi! 🐾 How may I help you today?', { chips: this.quickChips() })];
+    return [this.msg('Hi! 🐾 How may I help you today?')];
   };
   Engine.prototype.quickChips = function () {
-    return (this.cfg.quickReplies || []).map(function (q) { return { label: q, value: q.replace(/^[^A-Za-z]+/, '') }; });
+    return (this.cfg.quickReplies || []).map(function (q) { return typeof q === 'string' ? { label: q, value: q.replace(/^[^A-Za-z]+/, '') } : q; });
   };
 
   Engine.prototype.nextStep = function () {
     var b = this.state.b;
     if (b.focusTime && b.date && b.time == null) return { f: 'time' };
-    if (!b.city) return { f: 'city' };
     if (!b.pets.length) return { f: 'petType' };
     var miss = function (k) { return b.pets.filter(function (p) { return !p[k]; }); };
     if (miss('breed').length) return { f: 'breed', pets: miss('breed') };
@@ -721,6 +736,7 @@
     if (!b.history) return { f: 'history' };
     if (!b.date) return { f: 'date' };
     if (b.time == null) return { f: 'time' };
+    if (b.pickup == null) return { f: 'pickup' };
     if (!b.ownerName) return { f: 'ownerName' };
     if (!b.contact) return { f: 'contact' };
     if (/phone|both/.test(b.contact) && !b.phone) return { f: 'phone' };
@@ -734,13 +750,22 @@
       .map(function (s) { return s.trim(); }).filter(Boolean);
     var segs = parts.map(function (r) {
       var M = self.norm(r);
-      return { R: r, M: M, isQ: /\?/.test(r) || RX.qword.test(M) };
+      return { R: r, M: M, isQ: /\?/.test(r) || RX.qword.test(M) || RX.shortQ.test(M) };
     });
     return { R: text, M: this.norm(text), segs: segs };
   };
 
   /* ---------- the main entry point: one (batched) user message in, bot messages out ---------- */
   Engine.prototype.handle = function (input) {
+    var out = this.handleInner(input), s = this.state;
+    if (out.length && out[0].text === s.lastReply && !/^Sorry, I (can't help|didn't quite)/.test(out[0].text)) {
+      var t0 = out[0].text;
+      out[0].text = this.pick('rep', ['Sure, ', 'Of course, ', 'As I mentioned, ']) + (/^I[ '’]/.test(t0) ? t0 : lowerFirst(t0));
+    }
+    if (out.length) s.lastReply = out[out.length - 1].text;
+    return out;
+  };
+  Engine.prototype.handleInner = function (input) {
     var text = String(input == null ? '' : input).trim();
     if (!text) return [];
     var s = this.state, self = this;
@@ -761,16 +786,24 @@
 
     // 4. After the closing message: "no / thanks / bye" → short goodbye, then stop.
     if (s.stage === 'after' && small.only) {
-      if (small.yes && !small.no && !small.thanks && !small.bye) { s.stage = 'chat'; return [this.msg(this.pick('more', ['Of course! What else can I help you with?', 'Sure thing! What else would you like to know?']))]; }
+      if (small.yes && !small.no && !small.thanks && !small.bye) { s.stage = 'chat'; return [this.msg(this.pick('more', ['Of course! What else can I help you with?', 'Sure! What else would you like to know?']))]; }
       s.stage = 'ended';
       var lb = s.lastBooking, petName = lb && lb.pets && lb.pets[0] && lb.pets[0].name;
-      return [this.msg(this.pick('bye', petName ? ['You\'re very welcome! Give ' + petName + ' a cuddle from us. Bye for now! 🐾', 'Thanks for choosing {short}! See you and ' + petName + ' soon. 🐾'] : ['You\'re very welcome! Bye for now. 🐾', 'Thanks for stopping by {short}! Take care. 🐾']))];
+      return [this.msg(this.pick('bye', petName ? ['Thank you, goodbye, see you soon! 🐶', 'Thank you! Goodbye, and give ' + petName + ' a cuddle from us. 🐾'] : ['Thank you, goodbye, see you soon! 🐶', 'Thank you so much! Goodbye for now. 🐾']))];
     }
 
     if (s.stage === 'after') s.stage = 'chat';
     var b = s.b;
     var stepBefore = b.active ? this.nextStep() : null;
     var R = { answers: [], acks: [], errors: [], recognized: false, changed: [], got: {}, started: false, extraBefore: [] };
+
+    // 4b. "I want to visit" → where we are + invitation to book
+    if (RX.visit.test(M)) {
+      var visitLine = 'We\'re at ' + this.vars.address + ', and you\'re welcome to drop by ' + this.biz.hoursText + '.';
+      if (!b.active) { s.pendingOffer = { kind: 'book' }; return [this.msg(visitLine + ' Would you like to book an appointment as well?')]; }
+      var stv = this.nextStep();
+      return [this.msg(visitLine + ' ' + this.prompt(stv), this.chipsFor(stv) ? { chips: this.chipsFor(stv) } : null)];
+    }
 
     // 5. Pending yes/no offers (earliest appointment after an emergency, or "would you like to book?").
     if (offer && small.only && (small.yes || small.no)) {
@@ -781,21 +814,23 @@
           if (b.notes.indexOf('Follow-up after an emergency') < 0) b.notes.push('Follow-up after an emergency');
           R.acks.push(this.pick('heldSlot', ['Done, I\'ve pencilled in ' + this.relDay(offer.iso) + ' at ' + fmtTime(offer.min) + ' for you.', 'Lovely, ' + this.relDay(offer.iso) + ' at ' + fmtTime(offer.min) + ' it is.']));
         }
+        if (offer.kind === 'book' && offer.pickup) b.pickup = true;
         if (offer.kind === 'book' && offer.svc) { if (b.pets.length) b.pets.forEach(function (p) { if (!p.services.length) p.services = [offer.svc]; }); else b.pendingServices = [offer.svc]; }
         if (offer.kind === 'slot' && offer.iso && offer.min != null) { b.date = offer.iso; b.time = offer.min; R.acks.push(fmtTime(offer.min) + ' it is!'); }
         return this.compose(R, A, small);
       }
-      if (offer.kind === 'earliest') return [this.msg('Of course. I\'m here whenever you need me, and I hope your pet feels better soon. 💛')];
-      if (offer.kind === 'book') return [this.msg('No problem! Feel free to ask me anything else about {short}. 😊')];
+      if (offer.kind === 'earliest') return [this.msg('Of course. I hope your pet feels better soon. 💛')];
+      if (offer.kind === 'book') return [this.msg('No problem! Feel free to ask me anything about {short}. 😊')];
+      if (offer.kind === 'slot') return [this.msg('No problem. Which time would you prefer?', { chips: this.timeChips(b.date, null) })];
     }
 
     // 6. Booking summary: confirm or edit.
-    if (stepBefore && stepBefore.f === 'confirm' && b.summaryShown) {
+    if (stepBefore && stepBefore.f === 'confirm' && (b.summaryShown || b.awaitingEdit)) {
       var anyValue = this.hasValues(A);
       if (RX.confirmYes.test(M) && !anyValue && !RX.change.test(M.replace(/^ (yes|ok|okay) /, ' '))) return this.finalize();
-      if (RX.edit.test(M) && !anyValue) {
+      if (RX.edit.test(M) && !anyValue && M.trim().split(' ').length <= 3) {
         b.summaryShown = false; b.awaitingEdit = true;
-        return [this.msg(this.pick('edit', ['Of course! What would you like to change? For example, "change the time to 4 PM" or "my email is …".', 'Sure! Just tell me what to change, like the date, time, services or your contact details.']))];
+        return [this.msg(this.pick('edit', ['Of course! What would you like to change?', 'Sure! What should I change: the date, time, services or contact details?']))];
       }
     }
 
@@ -826,7 +861,7 @@
     if (!b.active) {
       b.active = true; R.started = true;
       if (s.profile) {
-        b.city = b.city || s.profile.city; b.ownerName = b.ownerName || s.profile.ownerName;
+        b.ownerName = b.ownerName || s.profile.ownerName;
         b.contact = b.contact || s.profile.contact; b.phone = b.phone || s.profile.phone; b.email = b.email || s.profile.email;
       }
     }
@@ -838,10 +873,10 @@
     // Quietly remember which pet this is about.
     var pets = this.findPets(A.M, false);
     if (pets.length && !s.b.pets.length) { var self = this; pets.forEach(function (f) { for (var i = 0; i < f.count; i++) s.b.pets.push(self.newPet(f.type)); }); }
-    var lines = [EMERGENCY_FIRST, this.pick('emg', ['If you need us, our emergency line is {emergency}.', 'You can also call our emergency line at {emergency}.'])];
+    var lines = [EMERGENCY_FIRST, 'Our emergency line is {emergency}.'];
     var e = this.earliestSlot();
     if (e) {
-      lines.push('Once your pet is safe, I can book the earliest follow-up appointment: ' + this.relDay(e.iso) + ' at ' + fmtTime(e.min) + '. Would you like that?');
+      lines.push('Once your pet is safe, shall I book the earliest follow-up, ' + this.relDay(e.iso) + ' at ' + fmtTime(e.min) + '?');
       s.pendingOffer = { kind: 'earliest', iso: e.iso, min: e.min };
     }
     return [this.msg(lines.join('\n'))];
@@ -861,12 +896,16 @@
   };
   Engine.prototype.bestQA = function (M, isQ) {
     var best = null, bestScore = 0;
-    for (var i = 0; i < this.qa.length; i++) {
-      var it = this.qa[i];
-      if (it.e.q && !isQ) continue;
-      var sc = this.scoreQA(it, M);
-      if (sc && it.groups.length > 1) sc += 0.25 * it.groups.length;
-      if (sc > bestScore) { best = it.e; bestScore = sc; }
+    for (var pass = 0; pass < 2 && !best; pass++) {
+      for (var i = 0; i < this.qa.length; i++) {
+        var it = this.qa[i];
+        if (it.e.q && !isQ) continue;
+        if (!!it.e.fallback !== (pass === 1)) continue;
+        var sc = this.scoreQA(it, M);
+        if (sc && it.groups.length > 1) sc += 0.25 * it.groups.length;
+        if (sc && it.e.boost) sc += it.e.boost;
+        if (sc > bestScore) { best = it.e; bestScore = sc; }
+      }
     }
     return best ? { e: best, score: bestScore } : null;
   };
@@ -889,13 +928,13 @@
       seg.answered = false;
       if (OFFTOPIC.test(M) && !self.findServices(M).length && !self.findPets(M, true).length) { seg.offtopic = true; return; }
       if (RX.medical.test(M)) {
-        add('medical', MEDICAL_FIRST + ' ' + self.pick('med2', ['You can also call us at {phone} if you have questions before then.', 'If you\'d like to talk it through sooner, call us at {phone}.']));
+        add('medical', MEDICAL_FIRST + ' ' + self.pick('med2', ['You can also call us at {phone}.', 'For questions before then, call us at {phone}.']));
         seg.answered = true;
         seg.medical = true;
         return;
       }
       if (RX.staffNames.test(M)) {
-        add('staffnames', 'I\'m not able to share individual team members\' names here, but all our vets and groomers are qualified and experienced. If you have a preference, just tell me and I\'ll note it for the team to confirm.');
+        add('staffnames', 'I can\'t share team names here, but all our vets and groomers are licensed and experienced. Tell me a preference and I\'ll note it.');
         seg.answered = true; return;
       }
       var staffM = seg.R.match(/\b(?:dr\.?|doctor)\s+([A-Za-z]{2,})/i) || seg.R.match(/\b(?:groomer|vet|stylist)\s+(?:named|called)\s+([A-Za-z]{2,})/i);
@@ -904,14 +943,14 @@
         var who = staffM ? (/^dr|^doctor/i.test(staffM[0]) ? 'Dr. ' + cap(staffM[1].toLowerCase()) : cap(staffM[1].toLowerCase())) : (M.match(RX.staffReq) || [''])[0].trim();
         b.staff = staffM ? who : 'Requested the ' + who;
         seg.answered = true;
-        add('staffreq', self.pick('staff', ['I\'ve noted your request for ' + (staffM ? who : 'the ' + who.replace(/^(same|specific|particular|preferred|usual|regular|favourite|favorite) /, '$1 ')) + '; the team will confirm who\'s available.', 'Noted! I\'ve added ' + (staffM ? 'your request for ' + who : 'that preference') + ' to the booking, and the team will confirm availability.']));
+        add('staffreq', 'I\'ve noted your request for ' + (staffM ? who : 'the ' + who) + ', and the team will confirm.');
         if (seg.isQ && !RX.book.test(M)) return;
       }
       if (RX.symptom.test(M) && !seg.isQ) {
         R.symptom = true;
-        add('symptom', self.pick('sym', ['I\'m sorry to hear that. I can\'t assess symptoms, but our vet can take a proper look during a General Checkup ({price:checkup}), and if things get worse suddenly, please head to the nearest emergency vet.', 'Oh no, I\'m sorry. I\'m not able to judge symptoms, but our vet can check things properly in a General Checkup ({price:checkup}); if it gets worse quickly, please go to the nearest emergency vet.']));
+        add('symptom', self.pick('sym', ['I\'m sorry to hear that. Our vet can check this properly at a General Checkup ({price:checkup}); if it gets worse suddenly, please see an emergency vet.', 'Oh no, I\'m sorry. Our vet can take a proper look at a General Checkup ({price:checkup}); if it gets worse quickly, please see an emergency vet.']));
       } else if (RX.symptom.test(M) && seg.isQ && !self.bestQA(M, true)) {
-        add('symptomq', 'I\'m not able to assess symptoms or give medical advice, but our vet can take a proper look during a General Checkup ({price:checkup}). If it seems serious or sudden, please go to the nearest emergency vet right away.');
+        add('symptomq', 'I can\'t assess symptoms, but our vet can take a proper look at a General Checkup ({price:checkup}). If it seems serious, please see an emergency vet right away.');
         seg.answered = true; return;
       }
       // availability question ("any slots tomorrow?")
@@ -934,7 +973,7 @@
         seg.priceAsk = true; return;
       }
       if (RX.price.test(M) && !svcs.length && b.pets.some(function (p) { return p.services.length; }) && !(qa && /how_much_multi|multi_discount|packages/.test(qa.e.id))) {
-        add('estimate', self.estimateText(true)); seg.answered = true; return;
+        add('estimate', self.estimateText()); seg.answered = true; return;
       }
       if (RX.price.test(M) && svcs.length && !(qa && /how_much_multi|multi_discount/.test(qa.e.id) && qa.score >= 3)) {
         add('price', self.priceAnswer(svcs, M)); seg.answered = true; seg.priceAsk = true;
@@ -949,11 +988,14 @@
         if (qa.e.id === 'reschedule' && b.active) return;                   // handled as a change in the booking
         if (qa.e.id === 'cancellation' && b.active && / cancel (it|this|the booking|my booking|the appointment|booking|appointment) /.test(M) && !/ (policy|how|can i|fee|charge)/.test(M)) return;
         var text = self.answerFor(qa.e, M);
-        if (qa.e.id === 'home_pickup' && b.active) text = 'Yes, we can! I\'ve added home pickup and drop to your booking (₹' + self.biz.homePickup.feeEachWay + ' each way within ' + self.biz.homePickup.radiusKm + ' km, free with the Spa Package), and the team will confirm the timing.';
+        if (qa.e.id === 'home_pickup' && !seg.isQ && (b.active || A.segs.length > 1 || RX.book.test(A.M) || self.findPets(A.M, false).length || self.findBreeds(A.M, false).length)) return;
+        if (qa.e.id === 'home_pickup') {
+          if (b.active) { text = 'Yes! I\'ve added ' + self.pickupLine() + ' to your booking.'; b.pickup = true; }
+          else { text = 'Yes, we offer ' + self.pickupLine() + '. Would you like me to add it to your booking?'; R.offerPickup = true; }
+        }
         if (qa.e.id === 'hours') text += self.dayOpenNote(M);
         if (add(qa.e.id, text)) seg.answered = true; else seg.answered = true;
-        if (qa.e.id === 'home_pickup' && b.active) { b.pickup = true; }
-        if (/home_pickup|packages|how_much_multi|multi_discount|farm/.test(qa.e.id)) seg.priceAsk = true;
+        if (/packages|how_much_multi|multi_discount|farm/.test(qa.e.id)) seg.priceAsk = true;
         // compound questions: "where are you and what's your number?" → answer each part
         if (seg.isQ) {
           seg.R.split(/\s+(?:and|also|plus)\s+|\s*[,&]\s*/i).forEach(function (part) {
@@ -975,8 +1017,8 @@
     }
     if (!d) return '';
     var label = isoOf(d) === isoOf(t) ? 'today' : isoOf(d) === isoOf(addDays(t, 1)) ? 'tomorrow' : fmtDate(d);
-    if (!this.isOpenDay(d)) return ' ' + cap(label) + ' is a Sunday, so we\'re closed then.';
-    if (isoOf(d) === isoOf(t) && this.nowMin() >= hm(this.biz.closeTime)) return ' We\'ve closed for today, but we\'re back tomorrow at 9 AM' + (this.isOpenDay(addDays(t, 1)) ? '.' : ' on Monday.');
+    if (!this.isOpenDay(d)) return ' ' + cap(label) + ' is a Sunday, so we\'re closed.';
+    if (isoOf(d) === isoOf(t) && this.nowMin() >= hm(this.biz.closeTime)) return ' We\'re closed for today and back at 9 AM tomorrow.';
     return ' So yes, we\'re open ' + label + '!';
   };
 
@@ -985,13 +1027,12 @@
     this.cfg.services.forEach(function (s) {
       var line;
       if (s.onRequest) return;
-      if (s.flat) line = '• ' + s.name + ': ' + inr(s.flat);
-      else line = '• ' + s.name + ': ' + s.prices.map(inr).join(' / ') + (s.perUnit ? ' ' + s.perUnit : '');
+      line = s.name + ': ' + (s.flat ? money(s.flat) : 'from ' + money(s.prices[0])) + (s.perUnit ? ' ' + s.perUnit : '');
       (s.cat === 'groom' ? g : v).push(line);
     });
     var farm = this.svc.farm;
-    return 'Here are our services and prices (small / medium / large pets):\n🛁 Grooming\n' + g.join('\n') + '\n🩺 Vet care\n' + v.join('\n') +
-      (farm ? '\n🐄 ' + farm.name + ': on request, from ' + inr(farm.from) + ' plus travel' : '') + '\nThe final price is confirmed at the clinic.';
+    return this.pick('plHead', ['Here are our services and prices:', 'Sure! Here\'s our price list:', 'Of course! Our services and prices:']) + '\n' + g.concat(v).join('\n') +
+      (farm ? '\n' + farm.name + ': from ' + money(farm.from) + ' + travel' : '') + '\nPrices depend on size and are confirmed at the clinic.';
   };
   Engine.prototype.priceAnswer = function (ids, M) {
     var self = this, b = this.state.b;
@@ -1002,13 +1043,13 @@
     if (!br && pets.length && pets[0].type !== 'dog') size = (this.petById[pets[0].type] || {}).group === 'farm' ? 'farm' : 's';
     var parts = ids.slice(0, 4).map(function (id) {
       var s = self.svc[id];
-      if (size === 'farm' || s.onRequest) return 'a ' + self.svc.farm.name + ' is arranged on request, from ' + inr(self.svc.farm.from) + ' plus travel';
-      if (s.flat) return art(s.name) + ' ' + s.name + ' is ' + inr(s.flat);
+      if (size === 'farm' || s.onRequest) return 'a ' + self.svc.farm.name + ' starts at ' + money(self.svc.farm.from) + ' plus travel';
+      if (s.flat) return art(s.name) + ' ' + s.name + ' is ' + money(s.flat);
       var kind = br ? (br.type === 'dog' || br.type === 'cat' ? br.type : 'pet') : (b.pets.length === 1 ? b.pets[0].label : 'pet');
       if (size && SIZE_WORD[size]) return art(s.name) + ' ' + s.name + ' is ' + self.svcPrice(id, size).text + ' for a ' + (kind === 'cat' ? '' : SIZE_WORD[size] + ' ') + kind + (br ? ' like a ' + br.display : '');
-      return art(s.name) + ' ' + s.name + ' is ' + inr(s.prices[0]) + ' for small, ' + inr(s.prices[1]) + ' for medium and ' + inr(s.prices[2]) + ' for large pets' + (s.perUnit ? ' (' + s.perUnit + ')' : '');
+      return art(s.name) + ' ' + s.name + ' starts at ' + money(s.prices[0]) + (s.perUnit ? ' ' + s.perUnit : '') + ', depending on size';
     });
-    return cap(joinList(parts)) + '. The final price is confirmed at the clinic.';
+    return cap(joinList(parts)) + '.';
   };
   Engine.prototype.durationAnswer = function (ids) {
     var self = this;
@@ -1022,7 +1063,7 @@
     if (b.awaitingEdit) f = null;
     // Segments we may read booking details from: statements, or questions that weren't Q&A
     // (e.g. "can I come tomorrow at 3?"), or anything with a booking cue.
-    var allowed = A.segs.filter(function (sg) { return !sg.medical && !sg.offtopic && (!sg.isQ || !sg.answered || RX.book.test(sg.M) || sg.avail); });
+    var allowed = A.segs.filter(function (sg) { return !sg.medical && !sg.offtopic && (!sg.isQ || !sg.answered || sg.avail || (b.active && RX.book.test(sg.M))); });
     var X = { R: allowed.map(function (x) { return x.R; }).join(' '), M: ' ' + allowed.map(function (x) { return x.M.trim(); }).join(' ') + ' ' };
     var XM = X.M, XR = X.R;
     var changeMode = RX.change.test(A.M);
@@ -1037,7 +1078,7 @@
     if (RX.book.test(XM) || / (book a visit|book an appointment) /.test(A.M)) hasBookingSignal = true;
 
     // --- pets
-    var foundPets = allowed.length ? this.findPets(XM, f === 'petType') : [];
+    var foundPets = allowed.length ? this.findPets(XM, f === 'petType' || XM.trim().split(' ').length <= 3) : [];
     var foundBreeds = allowed.length ? this.findBreeds(XM, f === 'breed' || f === 'petType' || allowed.some(function (sg) { var t = sg.M.trim(); return self.breeds.some(function (br) { return br.phrase === t; }); })) : [];
     
     if (foundPets.length) {
@@ -1092,6 +1133,7 @@
         var assigned = 0;
         chunks.forEach(function (c, i) {
           var cn = self.norm(c);
+          if (self.cities.indexOf(cn.trim()) >= 0) return;
           if (!miss[i] || c.split(/\s+/).length > 4 || !/^[A-Za-z][A-Za-z\s'-]*$/.test(c) || self.gibberish(cn) || RX.qword.test(cn)) return;
           var words = cn.trim().split(' ');
           if (words.some(function (w) { return STOP[w] && w !== 'a'; })) return;
@@ -1136,6 +1178,13 @@
     }
     var badAge = ages.filter(function (a) { return a.err; }).length;
     ages = ages.filter(function (a) { return !a.err; });
+    // "Bruno, 3" when we asked for the name and age together
+    var commaAge = A.R.match(/,\s*(\d{1,2}(?:\.\d)?)\s*(?=,|$)/);
+    if (!ages.length && commaAge && b.pets.some(function (p) { return !p.age; })) ages.push({ text: commaAge[1] + ' year' + (commaAge[1] === '1' ? '' : 's'), months: +commaAge[1] * 12 });
+    if (!ages.length && f === 'petName' && b.pets.length && A.M.trim().split(' ').length <= 10 && !this.parseDate(A.M) && !phones.length) {
+      var bareNums = (A.R.match(/(^|[\s,])(\d{1,2}(?:\.\d)?)(?![\d:\/]|\s*(am|pm|a\.m|p\.m|kg|lb|lbs|o'?clock))/gi) || []).map(function (x) { return x.replace(/[^\d.]/g, ''); });
+      bareNums.forEach(function (n) { if (+n > 0 && +n <= 40) ages.push({ text: n + ' year' + (n === '1' ? '' : 's'), months: +n * 12 }); });
+    }
     if (ages.length && b.pets.length) {
       var needAge = b.pets.filter(function (p) { return !p.age; });
       ages.forEach(function (a, i) {
@@ -1207,13 +1256,12 @@
       if (RX.anxious.test(hm2)) note('Nervous / anxious pet — go slowly');
       if (RX.bites.test(hm2)) note('May bite or snap — extra care');
     }
-    if (RX.pickup.test(A.M) && (b.active || hasBookingSignal)) { if (!b.pickup) got.pickup = true; b.pickup = true; }
+    if (RX.pickup.test(A.M) && (b.active || hasBookingSignal || got.petType || got.breed || got.need)) { if (!b.pickup) got.pickup = true; b.pickup = true; }
 
-    // --- city
-    var city = allowed.length ? this.findCity(XR, XM, f === 'city') : null;
-    if (city && city.toLowerCase() !== String(b.city || '').toLowerCase()) {
-      if (b.city && !changeMode && f !== 'city') { /* keep */ }
-      else { if (b.city) R.changed.push('your area to ' + city); b.city = city; got.city = true; }
+    // --- home pickup (asked after the time)
+    if (f === 'pickup' && b.pickup == null) {
+      if (RX.no.test(A.M) || / (no need|not needed|dont need|do not need|ill bring|i will bring|well bring|we will bring|ill drop|we will come|ill come|i will come|myself|no pickup|without pickup)( |$)/.test(A.M)) { b.pickup = false; got.pickup = true; }
+      else if (RX.yesish.test(A.M) || / (pickup|pick up|collect|need it|please do|yes please)( |$)/.test(A.M)) { b.pickup = true; got.pickup = true; }
     }
 
     // --- owner name
@@ -1326,7 +1374,7 @@
     }
 
     // --- did this message start or continue a booking?
-    if (!b.active && (hasBookingSignal || got.need || (got.date && stepBefore) || ((got.petType || got.breed) && !R.answers.length))) this.ensureActive(R);
+    if (!b.active && (hasBookingSignal || ((got.need || got.date || got.petType || got.breed) && !R.answers.length))) this.ensureActive(R);
     if (b.awaitingEdit && this.anyGot(got)) b.awaitingEdit = false;
     if (b.awaitingEdit && R.cleared) b.awaitingEdit = false;
     R.recognized = this.anyGot(got) || R.errors.length > 0 || R.changed.length > 0 || !!R.taken || !!R.cleared || R.cancelBooking || hasBookingSignal;
@@ -1409,7 +1457,7 @@
     }
     // "Bruno and Luna" / "Bruno" when we just asked for the name
     if (!out.length && pending) {
-      var t = R.trim().replace(/^(his|her|its|their|the)?\s*names?\s*(is|are|:)?\s*/i, '').replace(/^(it's|its|it is|he's|hes|he is|she's|shes|she is|they're|they are|called|named)\s+/i, '');
+      var t = R.trim().replace(/[,\s]*\b\d{1,2}(\.\d)?\s*(years?|yrs?|y\/?o|months?|mos?|weeks?|wks?)?(\s*old)?\b/gi, ' ').replace(/\b(and )?(he|she|it)('s| is)?\s*$/i, '').replace(/\s+(is|aged|age)\s*$/i, '').replace(/\s+/g, ' ').trim().replace(/^(his|her|its|their|the)?\s*names?\s*(is|are|:)?\s*/i, '').replace(/^(it's|its|it is|he's|hes|he is|she's|shes|she is|they're|they are|called|named)\s+/i, '');
       var chunk = t.split(/[.!?\n]/)[0].split(/,\s*(?=(?:he|she|it|they|and he|and she)\b)/i)[0];
       var partsN = chunk.split(/\s*(?:,|\band\b|&)\s*/i).filter(Boolean);
       if (partsN.length <= 6) {
@@ -1463,7 +1511,7 @@
     }
     s.lastErr[field] = text;
     if (n >= 3) {
-      var extra = ['If it\'s easier, you can also call us at {phone}.', 'You\'re always welcome to call us at {phone} too.', 'Or give us a ring at {phone} and we\'ll sort it out together.'];
+      var extra = ['You can also call us at {phone}.', 'Or just call us at {phone}.', 'Feel free to call us at {phone} too.'];
       var lastX = s.lastErr[field + '_x'], pool2 = extra.filter(function (x) { return x !== lastX; });
       var x = pool2[(n - 3) % pool2.length];
       s.lastErr[field + '_x'] = x;
@@ -1472,82 +1520,87 @@
     return { field: field, text: text };
   };
   Engine.prototype.nameError = function () {
-    return this.fail('ownerName', 'I just need the name to put on the booking, something like "Priya Sharma" or simply "Priya".',
-      ['Could you share just your name?', 'What name should I use? A first name is fine.', 'I only need your name here, like "Priya".', 'Just your name, please, and we\'re nearly done!']);
+    return this.fail('ownerName', 'I just need a name for the booking, like "Emma" or "Emma Johnson".',
+      ['Could you share just your name?', 'What name should I use? A first name is fine.', 'I only need your name here, like "Emma".', 'Just your name, and we\'re nearly done!']);
   };
   Engine.prototype.phoneError = function () {
     return this.fail('phone',
-      'Hmm, that number doesn\'t look quite right. Could you share a 10-digit mobile number, like 98765 43210, or include your country code, like +44 7911 123456?',
-      ['That still doesn\'t look like a valid number. Mind checking it once more?', 'Hmm, I couldn\'t read that as a phone number. Could you try again?', 'That number seems a digit or two off. Could you double-check it?', 'I still can\'t use that number. One more try?']);
+      'Hmm, that number doesn\'t look right. A 10-digit number like (512) 555-0142 works best.',
+      ['That still doesn\'t look like a valid number. Mind checking it?', 'Hmm, I couldn\'t read that as a phone number. One more try?', 'That number seems a digit or two off. Could you double-check?', 'I still can\'t use that number. Could you try again?']);
   };
   Engine.prototype.emailError = function (e) {
     if (e && e.err === 'typo') {
-      return this.fail('email', 'I think there might be a small typo in that email. Did you mean ' + e.suggestion + '? If so, just send it again.',
-        ['Did you mean ' + e.suggestion + '? Just send the corrected address.', 'That domain looks slightly off. Is it ' + e.suggestion + '?']);
+      return this.fail('email', 'I think there\'s a small typo. Did you mean ' + e.suggestion + '?',
+        ['Did you mean ' + e.suggestion + '?', 'That domain looks a little off. Is it ' + e.suggestion + '?']);
     }
-    return this.fail('email', 'That email looks a little off. It should look like name@example.com, with an @ and a domain at the end.',
-      ['That email still doesn\'t look right. Mind checking it?', 'Hmm, I can\'t use that address. Could you try once more?', 'Something\'s off with that email. Could you double-check it?', 'I still can\'t read that as an email address. One more go?']);
+    return this.fail('email', 'That email looks a little off. It should look like name@example.com.',
+      ['That email still doesn\'t look right. Mind checking it?', 'Hmm, I can\'t use that address. One more try?', 'Something\'s off with that email. Could you double-check?', 'I still can\'t read that as an email. Could you try again?']);
   };
   Engine.prototype.dateError = function (d) {
-    var self = this, ex = fmtDate(this.openDaysAhead(3)[2] || addDays(this.today(), 3));
-    if (d.err === 'impossible') return this.fail('date', d.month + ' only has ' + d.dim + ' days, so that date doesn\'t exist. Could you pick another one, like "tomorrow" or "' + ex + '"?',
-      ['That date isn\'t on the calendar. Could you pick another?', 'Hmm, that\'s not a real date. Which other day works?', 'That day doesn\'t exist, sadly! Another date?']);
-    if (d.err === 'past') return this.fail('date', 'That date has already passed. Could you choose an upcoming day, like "tomorrow" or "' + ex + '"?',
-      ['That day\'s already gone. Which upcoming day works?', 'That one\'s in the past. How about a day this week?', 'We can\'t go back in time, sadly! Another date?']);
+    var ex = fmtDate(this.openDaysAhead(3)[2] || addDays(this.today(), 3));
+    if (d.err === 'impossible') return this.fail('date', d.month + ' only has ' + d.dim + ' days. Could you pick another date, like "tomorrow" or "' + ex + '"?',
+      ['That date isn\'t on the calendar. Another one?', 'Hmm, that\'s not a real date. Which day works?', 'That day doesn\'t exist, sadly! Another date?']);
+    if (d.err === 'past') return this.fail('date', 'That date has already passed. Could you pick an upcoming day, like "tomorrow" or "' + ex + '"?',
+      ['That day\'s already gone. Which upcoming day works?', 'That one\'s in the past. How about this week?', 'We can\'t go back in time, sadly! Another date?']);
     if (d.err === 'closed') {
       var alt = this.openDaysAhead(2, fromIso(d.iso)).map(fmtDate);
       var before = addDays(fromIso(d.iso), -1), opts = [];
       if (before >= this.today() && this.isOpenDay(before) && this.freeSlots(isoOf(before)).length) opts.push(fmtDate(before));
       opts = opts.concat(alt).slice(0, 2);
-      return this.fail('date', 'We\'re closed on Sundays so our team can rest. Would ' + joinList(opts, 'or') + ' work instead?',
+      return this.fail('date', 'We\'re closed on Sundays. Would ' + joinList(opts, 'or') + ' work instead?',
         ['We\'re closed that day. Would ' + joinList(opts, 'or') + ' suit you?', 'Sundays are our day off. How about ' + joinList(opts, 'or') + '?', 'That\'s a Sunday, sorry! Another day?']);
     }
     if (d.err === 'toofar') return this.fail('date', 'We can book up to 3 months ahead. Could you pick a date before ' + fmtDate(addDays(this.today(), this.biz.bookingWindowDays || 90)) + '?',
-      ['That\'s a bit too far ahead. Something within the next 3 months?', 'We can only book 3 months out. A sooner date?']);
-    if (d.err === 'todayDone') { var nx = this.openDaysAhead(1, addDays(this.today(), 1))[0]; return this.fail('date', 'We\'re fully booked for the rest of today, sorry! The next free day is ' + fmtDate(nx) + '. Would that work?', ['Today\'s all booked up. How about ' + fmtDate(nx) + '?', 'No slots left today, sadly. ' + fmtDate(nx) + ' instead?']); }
+      ['That\'s a bit too far ahead. Something within 3 months?', 'We only book 3 months out. A sooner date?']);
+    if (d.err === 'todayDone') { var nx = this.openDaysAhead(1, addDays(this.today(), 1))[0]; return this.fail('date', 'We\'re fully booked for today, sorry! Would ' + fmtDate(nx) + ' work?', ['Today\'s all booked up. How about ' + fmtDate(nx) + '?', 'No slots left today. ' + fmtDate(nx) + ' instead?']); }
     if (d.err === 'full') { var nx2 = this.openDaysAhead(1, fromIso(d.iso))[0]; return { field: 'date', text: fmtDate(fromIso(d.iso)) + ' is fully booked, sorry! The next free day is ' + fmtDate(nx2) + '.' }; }
-    return this.fail('date', 'I couldn\'t quite work out the date. You can say something like "tomorrow", "Friday" or "' + ex + '".',
+    return this.fail('date', 'I couldn\'t work out the date. Try "tomorrow", "Friday" or "' + ex + '".',
       ['Which day did you mean? "Tomorrow" or "' + ex + '" works.', 'Sorry, which date was that?']);
   };
-  Engine.prototype.timeError = function (t, min) {
-    var self = this;
+  Engine.prototype.timeError = function (t) {
     if (t.err === 'offgrid') return { field: 'time', soft: true, text: 'Our slots run on the hour and half hour, so ' + joinList(t.near.map(fmtTime), 'or') + ' would work. Which do you prefer?' };
-    if (t.err === 'outside') return this.fail('time', 'We\'re open 9 AM to 7 PM, with the last appointment starting at 6:00 PM. Could you pick a time in that window, like 11:00 AM or 4:30 PM?',
-      ['That\'s outside our hours. Anything from 9 AM to 6 PM works.', 'We\'re closed then. How about something between 9 AM and 6 PM?', 'That time\'s outside our opening hours. Another time?']);
-    if (t.err === 'past') return this.fail('time', 'That time has already passed (or is too soon) for today. The next free slots are ' + joinList((t.near || []).map(fmtTime), 'and') + '.',
+    if (t.err === 'outside') return this.fail('time', 'We\'re open 9 AM–7 PM, and the last slot is 6:00 PM. Could you pick a time like 11:00 AM or 4:30 PM?',
+      ['That\'s outside our hours. Anything from 9 AM to 6 PM works.', 'We\'re closed then. How about between 9 AM and 6 PM?', 'That time\'s outside our hours. Another time?']);
+    if (t.err === 'past') return this.fail('time', 'That time is too soon for today. The next free slots are ' + joinList((t.near || []).map(fmtTime), 'and') + '.',
       ['That one\'s too soon for today. Maybe ' + joinList((t.near || []).map(fmtTime), 'or') + '?', 'That time has gone for today. ' + joinList((t.near || []).map(fmtTime), 'or') + ' instead?']);
-    return this.fail('time', 'I couldn\'t quite catch the time. You can say something like "11 AM" or "4:30 PM".', ['Which time did you mean? "11 AM" or "4:30 PM" works.', 'Sorry, what time was that?']);
+    return this.fail('time', 'I couldn\'t catch the time. Try "11 AM" or "4:30 PM".', ['Which time did you mean? "11 AM" works.', 'Sorry, what time was that?']);
   };
 
-  /* ---------- prompts ---------- */
+  /* ---------- prompts (one question at a time) ---------- */
+  Engine.prototype.hoursLine = function () { return 'We\'re open ' + this.biz.hoursText + '.'; };
+  Engine.prototype.pickupLine = function () {
+    var hp = this.biz.homePickup;
+    return 'home pickup and drop-off within ' + hp.radiusMiles + ' miles for ' + money(hp.feeEachWay) + ' each way';
+  };
   Engine.prototype.prompt = function (st) {
-    var b = this.state.b, self = this, p, pets = st.pets || [];
+    var b = this.state.b, p, pets = st.pets || [];
     switch (st.f) {
-      case 'city': return this.pick('pCity', ['To get started, which city or area are you in?', 'First things first: which city or area are you based in?', 'Which city or area are you in?']);
-      case 'petType': return this.pick('pType', ['What kind of pet do you have: a dog, cat, bird, rabbit, or someone else?', 'Who\'s the lucky pet: a dog, a cat, or another little (or big!) friend?']);
+      case 'petType': return this.pick('pType', ['What type of pet do you have? A dog, cat, bird, rabbit, or something else?', 'What type of pet is the appointment for? A dog, cat, bird, rabbit, or another animal?']);
       case 'breed':
-        if (pets.length === 1) { p = this.petRef(pets[0]); return this.pick('pBreed', ['What breed is ' + p + '? "Mixed" or "not sure" is totally fine too.', 'Which breed is ' + p + '? If you\'re not sure, just say so.']); }
-        return 'What breeds are ' + this.petsRef(pets) + '? For example, "Labrador and Persian"; "not sure" works too.';
+        if (pets.length === 1) { p = this.petRef(pets[0]); return this.pick('pBreed', ['What breed is ' + p + '?', 'Which breed is ' + p + '? "Mixed" is fine too.']); }
+        return 'What breeds are ' + this.petsRef(pets) + '?';
       case 'petName':
-        if (pets.length === 1) { p = this.petRef(pets[0]); return this.pick('pName', ['What\'s ' + this.poss(p) + ' name?', 'And what\'s ' + p + ' called?']); }
-        var types = pets.map(function (x) { return x.breed && !/not sure|Mixed/.test(x.breed) ? x.breed : x.label; });
-        if (types.every(function (t) { return t === types[0]; })) return 'What are their names?';
-        return 'What are their names? Just list them in order: ' + joinList(types.map(function (t) { return 'the ' + t; }), 'then') + '.';
+        if (pets.length === 1) {
+          p = this.petRef(pets[0]);
+          return /^your /.test(p) ? 'What\'s ' + this.poss(p) + ' name and age?' : 'How old is ' + p + '?';
+        }
+        return 'What are their names and ages?';
       case 'age':
-        if (pets.length === 1) { p = this.petRef(pets[0]); return this.pick('pAge', ['How old is ' + p + '?', 'And how old is ' + p + ' now?']); }
+        if (pets.length === 1) { p = this.petRef(pets[0]); return this.pick('pAge', ['And how old is ' + p + '?', 'How old is ' + p + '?']); }
         return 'How old are ' + this.petsRef(pets) + '?';
       case 'need':
-        if (pets.length === 1 && b.pets.length === 1) { p = this.petRef(pets[0]); return this.pick('pNeed', ['What does ' + p + ' need help with today: grooming, a vet checkup, vaccines, or something else?', 'What can we do for ' + p + ': a bath, full grooming, a vet checkup, or something else?']); }
-        if (pets.length === 1) return 'And what does ' + this.petRef(pets[0]) + ' need?';
-        var n1 = this.petRef(pets[0]), n2 = this.petRef(pets[1]);
-        return 'What does each of them need? For example, "full grooming for ' + n1.replace(/^your /, 'the ') + ' and a bath for ' + n2.replace(/^your /, 'the ') + '", or "both need a checkup".';
+        if (b.pets.length === 1) return 'What would you like us to help with: grooming, a checkup, vaccination, or a concern?';
+        if (pets.length === 1) return 'And what would you like us to help ' + this.petRef(pets[0]) + ' with?';
+        return 'What would you like us to help each of them with: grooming, a checkup, vaccination, or a concern?';
       case 'history':
         var ref = this.petsRef(b.pets), many = b.pets.length > 1;
-        return this.pick('pHist', ['Has a vet or groomer seen ' + ref + ' before? If so, how did the last visit go?', (many ? 'Have ' : 'Has ') + ref + ' been to a vet or groomer before, and how did it go last time?']);
-      case 'date': if (b.pets.length && b.pets.every(function (p) { return p.services.indexOf('farm') >= 0; })) return 'Which day would you like our team to visit?';
-        return this.pick('pDate', ['Which day would you like to come in?', 'What day works best for you?', 'Which day suits you?']);
+        return (many ? 'Have ' : 'Has ') + ref + ' been seen by a vet or groomer before? What happened last time?';
+      case 'date':
+        if (b.pets.length && b.pets.every(function (x) { return x.services.indexOf('farm') >= 0; })) return 'Which day would you like our team to visit?';
+        return this.hoursLine() + ' ' + this.pick('pDate', ['Which day works best for you?', 'Which day would you like to come in?']);
       case 'time': return this.pick('pTime', ['What time works for you ' + this.whenText(b.date) + '?', 'Which time suits you ' + this.whenText(b.date) + '?']);
-      case 'ownerName': return this.pick('pOwner', ['May I have your name for the booking?', 'And what name should I put the booking under?']);
+      case 'pickup': return 'Would you like ' + this.pickupLine() + '?';
+      case 'ownerName': return this.pick('pOwner', ['May I have your name for the booking?', 'What name should I put the booking under?']);
       case 'contact': return 'What\'s the best way to reach you: phone, email, or both?';
       case 'phone': return this.pick('pPhone', ['What\'s your phone number?', 'Could you share your phone number?']);
       case 'email': return this.pick('pEmail', ['What\'s your email address?', 'And your email address?']);
@@ -1558,63 +1611,51 @@
     var b = this.state.b;
     if (st.f === 'date') return this.dateChips();
     if (st.f === 'time' && b.date) return this.timeChips(b.date, b.timePref);
+    if (st.f === 'pickup') return [{ label: 'Yes, please', value: 'Yes, please' }, { label: 'No, thanks', value: 'No, thanks' }];
+    if (st.f === 'contact') return [{ label: 'Phone', value: 'Phone' }, { label: 'Email', value: 'Email' }, { label: 'Both', value: 'Both' }];
     return null;
   };
 
   Engine.prototype.ackFor = function (R) {
-    var b = this.state.b, got = R.got, self = this;
+    var b = this.state.b, got = R.got;
     if (R.changed.length) {
       var ch = R.changed.filter(function (c) { return c !== 'added' && c !== 'services'; });
-      if (R.changed.indexOf('added') >= 0 && !ch.length) return this.pick('addPet', ['Lovely, I\'ve added another pet to the booking!', 'Got it, one more furry friend added! 🐾']);
-      if (R.changed.indexOf('services') >= 0 && !ch.length) return this.pick('chSvc', ['Done, I\'ve updated the services.', 'Got it, services updated!']);
-      return this.pick('chg', ['Done! I\'ve updated ' + joinList(ch) + '.', 'No problem, I\'ve changed ' + joinList(ch) + '.']);
+      if (R.changed.indexOf('added') >= 0 && !ch.length) return this.pick('addPet', ['Lovely, I\'ve added another pet!', 'One more furry friend added! 🐾']);
+      if (R.changed.indexOf('services') >= 0 && !ch.length) return this.pick('chSvc', ['Done, services updated.', 'Got it, I\'ve updated the services.']);
+      return this.pick('chg', ['Done, I\'ve updated ' + joinList(ch) + '.', 'No problem, I\'ve changed ' + joinList(ch) + '.']);
     }
     if (R.acks && R.acks.length) return '';
-    if (R.started) return this.pick('start', ['I\'d be happy to help with that! 🐾', 'Lovely, let\'s get that booked! 🐾', 'Of course, happy to help! 🐾']);
+    if (R.started) return this.pick('start', ['Happy to help! 🐾', 'Lovely, let\'s get you booked in! 🐾', 'Of course! 🐾']);
     var keys = Object.keys(got).filter(function (k) { return got[k] && k !== 'timePref'; });
-    if (keys.length >= 3) return this.pick('many', ['Thanks, that\'s really helpful!', 'Perfect, I\'ve got all of that.', 'Got it, thanks for all the details!']);
-    if (got.ownerName) return this.pick('aOwner', ['Lovely to meet you, ' + b.ownerName.split(' ')[0] + '!', 'Thanks, ' + b.ownerName.split(' ')[0] + '!']);
-    if (got.petName) { var named = b.pets.filter(function (p) { return p.name; }); var nm = named[named.length - 1].name; return named.length > 1 && keys.length === 1 ? 'Aww, lovely names!' : this.pick('aName', [nm + ' is such a sweet name!', 'Aww, hello ' + nm + '! 🐾']); }
-    if (got.city) {
-      if (String(b.city).toLowerCase() === String(this.biz.city).toLowerCase() || this.isLocalArea(b.city)) return this.pick('aCity', ['Perfect, we\'re right here in ' + this.biz.city + '!', 'Great, you\'re close by!']);
-      return 'Thanks! Just so you know, our clinic is in ' + this.biz.city + ' (' + this.biz.street + '), and we offer home pickup within ' + this.biz.homePickup.radiusKm + ' km of it.';
-    }
-    if (got.petType && b.pets.length) { var pd = this.petById[b.pets[b.pets.length - 1].type] || {}; return b.pets.length > 1 && keys.length === 1 ? 'Aww, a full house! 🐾' : 'Aww, a ' + b.pets[b.pets.length - 1].label + '! ' + (pd.emoji || '🐾'); }
-    if (got.breed) { var br = (b.pets.filter(function (p) { return p.breed; }).slice(-1)[0] || {}).breed || ''; return /not sure|mixed/i.test(br) ? 'No problem at all!' : br === 'Indie' ? 'Indies are the best! 🐾' : this.pick('aBreed', ['Lovely!', 'Aww, ' + br + 's are wonderful!']); }
+    if (keys.length >= 3) return this.pick('many', ['Thanks, got all of that!', 'Perfect, thank you!', 'Great, thanks for the details!']);
+    if (got.ownerName) return this.pick('aOwner', ['Thanks, ' + b.ownerName.split(' ')[0] + '!', 'Great, thank you, ' + b.ownerName.split(' ')[0] + '!']);
+    if (got.petName) { var named = b.pets.filter(function (p) { return p.name; }); var nm = named[named.length - 1].name; return named.length > 1 ? 'Lovely names!' : this.pick('aName', ['Aww, hello ' + nm + '! 🐾', nm + ' is such a sweet name!']); }
+    if (got.petType && b.pets.length) { var last = b.pets[b.pets.length - 1], pd = this.petById[last.type] || {}; return b.pets.length > 1 ? 'A full house! 🐾' : cap(art(last.label)) + ' ' + last.label + ', lovely! ' + (pd.emoji || '🐾'); }
+    if (got.breed) return this.pick('aBreed', ['Lovely!', 'Great, thanks!']);
     if (got.history) {
-      if (b.history === 'First visit') return b.notes.some(function (n) { return /Nervous|bite/.test(n); }) ? 'Thanks for telling me! We\'ll make the first visit a calm, unhurried one.' : 'No problem at all, we\'ll make the first visit a gentle one.';
-      if (b.notes.some(function (n) { return /Nervous|bite/.test(n); })) return 'Thanks for telling me; we\'ll take things nice and slow.';
-      return this.pick('aHist', ['Thanks, that\'s helpful to know.', 'Got it, thanks for sharing that.']);
+      var nervous = b.notes.some(function (n) { return /Nervous|bite/.test(n); });
+      if (nervous) return 'Thanks for telling me; we\'ll take things nice and slow.';
+      if (b.history === 'First visit') return 'No problem, we\'ll make the first visit a gentle one.';
+      return this.pick('aHist', ['Thanks, that\'s helpful.', 'Got it, thanks for sharing.']);
     }
-    if (got.age) return this.pick('aAge', ['Got it.', 'Thanks!', 'Lovely.']);
+    if (got.age) return this.pick('aAge', ['Got it.', 'Thanks!']);
     if (got.time && b.time != null) return fmtTime(b.time) + ' it is!';
+    if (got.date && b.date) return this.pick('aDate', [cap(this.relDay(b.date)) + ' it is! 📅', 'Great, ' + this.relDay(b.date) + '! 📅']);
+    if (got.pickup) return b.pickup ? 'Pickup added! 🚗' : 'No problem.';
     if (got.contact || got.phone || got.email) return this.pick('aContact', ['Got it.', 'Perfect.', 'Thanks!']);
-    if (got.pickup) return 'I\'ve noted home pickup for you.';
     return '';
   };
-  Engine.prototype.isLocalArea = function (c) {
-    return ['indiranagar', 'koramangala', 'whitefield', 'jayanagar', 'hsr layout', 'electronic city', 'jp nagar', 'marathahalli', 'hebbal', 'yelahanka', 'malleshwaram', 'btm layout', 'banashankari', 'rajajinagar', 'bangalore'].indexOf(String(c).toLowerCase()) >= 0 && /bengaluru|bangalore/i.test(this.biz.city);
-  };
 
+  /* One short line with the price of what was asked for. */
   Engine.prototype.servicesText = function () {
-    var b = this.state.b, self = this;
-    var lines = b.pets.map(function (p) {
-      var size = self.petSize(p);
-      var items = p.services.map(function (id) {
-        var pr = self.svcPrice(id, size === 'farm' ? null : size);
-        return art(self.svc[id].name) + ' ' + self.svc[id].name + ' (' + pr.text + ')';
-      });
-      return { p: p, text: joinList(items) };
-    });
-    var head;
-    if (lines.length === 1) {
-      var p = lines[0].p, inc = p.services.indexOf('groom') >= 0 ? ', which already includes a bath, nail trim and ear cleaning' : p.services.indexOf('spa') >= 0 ? ', which includes everything from the bath to the teeth cleaning' : '';
-      head = 'For ' + this.petRef(p) + ', I\'d suggest ' + lines[0].text + inc + '.';
-    } else {
-      if (lines.every(function (l) { return l.text === lines[0].text; })) head = 'For ' + this.petsRef(b.pets) + ', I\'d suggest ' + lines[0].text + ' each.';
-      else head = 'Here\'s what I\'d suggest: ' + lines.map(function (l) { return l.text + ' for ' + self.petRef(l.p); }).join('; ') + '.';
+    var b = this.state.b, self = this, t = this.totals();
+    if (b.pets.every(function (p) { return p.services.indexOf('farm') >= 0; })) return 'Farm visits start at ' + money(this.svc.farm.from) + ' plus travel.';
+    if (b.pets.length === 1 && b.pets[0].services.length === 1) {
+      var p = b.pets[0], id = p.services[0], pr = this.svcPrice(id, this.petSize(p));
+      return cap(art(this.svc[id].name)) + ' ' + this.svc[id].name + ' for ' + this.petRef(p) + ' is ' + pr.text + '.';
     }
-    return head + ' ' + this.estimateText(false);
+    var amount = t.lo === t.hi ? money(t.lo) : 'from ' + money(t.lo);
+    return 'That comes to ' + amount + ' for ' + this.petsRef(b.pets) + (t.discount ? ', with ' + t.discount + '% off the second pet' : '') + '.';
   };
   Engine.prototype.totals = function () {
     var b = this.state.b, self = this, lo = 0, hi = 0, onReq = false, disc = this.biz.multiPetDiscount || 0;
@@ -1629,38 +1670,36 @@
     });
     return { lo: Math.round(lo), hi: Math.round(hi), onReq: onReq, discount: b.pets.length > 1 && disc };
   };
-  Engine.prototype.estimateText = function (standalone) {
-    var t = this.totals(), parts = [];
-    if (t.hi) parts.push((standalone ? 'Your booking comes to ' : 'That\'s ') + 'about ' + (t.lo === t.hi ? inr(t.lo) : inr(t.lo) + '–' + inr(t.hi)) + (t.discount ? ' with ' + t.discount + '% off the extra pet' + (this.state.b.pets.length > 2 ? 's' : '') : '') + (t.onReq ? ', plus the farm visit quote' : ''));
-    else if (t.onReq) parts.push('The farm visit is quoted on request, from ' + inr(this.svc.farm.from) + ' plus travel');
-    return parts.join('') + '; the final price is confirmed at the clinic.';
+  Engine.prototype.estimateText = function () {
+    var t = this.totals();
+    if (!t.hi) return 'Farm visits start at ' + money(this.svc.farm.from) + ' plus travel.';
+    return 'Your booking comes to ' + (t.lo === t.hi ? money(t.lo) : 'about ' + money(t.lo) + '–' + money(t.hi)) + '; the final price is confirmed at the clinic.';
   };
 
   Engine.prototype.summaryCard = function () {
-    var b = this.state.b, self = this, t = this.totals();
+    var b = this.state.b, self = this, t = this.totals(), hp = this.biz.homePickup;
     var contact = [];
     if (/phone|both/.test(b.contact) && b.phone) contact.push('📞 ' + b.phone);
-    if (/email|both/.test(b.contact) && b.email) contact.push('📧 ' + b.email);
+    if (/email|both/.test(b.contact) && b.email) contact.push(b.email);
     return {
       title: 'Booking summary',
       pets: b.pets.map(function (p, i) {
         var size = self.petSize(p);
         return {
           title: (p.name || cap(p.label)) + ' · ' + cap(p.label) + (p.breed ? ' · ' + p.breed : '') + (p.age ? ' · ' + p.age : ''),
-          services: p.services.map(function (id) { var pr = self.svcPrice(id, size === 'farm' ? null : size); return self.svc[id].name + ' — ' + pr.text.replace(', depending on size', '') + (i > 0 && pr.hi != null && self.biz.multiPetDiscount ? ' (−' + self.biz.multiPetDiscount + '%)' : ''); }),
+          services: p.services.map(function (id) { var pr = self.svcPrice(id, size === 'farm' ? null : size); return self.svc[id].name + ' — ' + pr.text + (i > 0 && pr.hi != null && self.biz.multiPetDiscount ? ' (−' + self.biz.multiPetDiscount + '%)' : ''); }),
           need: p.need && (self.petById[p.type] || {}).group === 'farm' ? 'Needs: ' + p.need : null
         };
       }),
       rows: [
         ['📅 When', fmtDate(fromIso(b.date)) + ' at ' + fmtTime(b.time)],
+        ['🚗 Pickup', b.pickup ? 'Yes (' + money(hp.feeEachWay) + ' each way)' : 'No, I\'ll bring my pet'],
         ['👤 Owner', b.ownerName],
         ['💬 Contact', contact.join('  ·  ')],
-        ['📍 Area', b.city],
         ['🩺 History', b.history]
-      ].concat(b.pickup ? [['🚗 Pickup', 'Home pickup & drop (₹' + this.biz.homePickup.feeEachWay + ' each way, free with Spa)']] : [])
-        .concat(b.staff ? [['⭐ Request', b.staff + ' (team will confirm)']] : [])
+      ].concat(b.staff ? [['⭐ Request', b.staff + ' (team will confirm)']] : [])
         .concat(b.notes.length ? [['📝 Notes', b.notes.join('; ')]] : []),
-      total: t.hi ? 'Estimated total: ' + (t.lo === t.hi ? inr(t.lo) : inr(t.lo) + '–' + inr(t.hi)) + (t.onReq ? ' + farm visit quote' : '') : 'Farm visit: quoted on request',
+      total: (t.hi ? 'Estimated total: ' + (t.lo === t.hi ? money(t.lo) : money(t.lo) + '–' + money(t.hi)) + (t.onReq ? ' + farm visit' : '') : 'Farm visit: from ' + money(this.svc.farm.from) + ' + travel') + (b.pickup ? ' + ' + money(hp.feeEachWay * 2) + ' pickup' : ''),
       footnote: 'Final price confirmed at the clinic.'
     };
   };
@@ -1671,24 +1710,23 @@
       id: 'PC-' + Date.now().toString(36).toUpperCase().slice(-6),
       createdAt: new Date().toISOString(),
       business: this.vars.name,
-      ownerName: b.ownerName, phone: b.phone, email: b.email, contactPref: b.contact, city: b.city,
+      ownerName: b.ownerName, phone: b.phone, email: b.email, contactPref: b.contact,
       pets: b.pets.map(function (p) { return { name: p.name, type: p.label, breed: p.breed, age: p.age, services: p.services.map(function (id) { return self.svc[id].name; }), need: p.need }; }),
       dateISO: b.date, timeMin: b.time, dateLabel: fmtDateLong(fromIso(b.date)), timeLabel: fmtTime(b.time),
-      history: b.history, notes: b.notes.slice(), staff: b.staff, pickup: b.pickup,
-      estimate: (function () { var t = self.totals(); return t.hi ? (t.lo === t.hi ? inr(t.lo) : inr(t.lo) + '–' + inr(t.hi)) : 'On request'; })(),
+      history: b.history, notes: b.notes.slice(), staff: b.staff, pickup: !!b.pickup,
+      estimate: (function () { var t = self.totals(); return t.hi ? (t.lo === t.hi ? money(t.lo) : money(t.lo) + '–' + money(t.hi)) : 'From ' + money(self.svc.farm.from); })(),
       durationMin: Math.min(240, Math.max(30, b.pets.reduce(function (acc, p) { return acc + p.services.reduce(function (a, id) { return a + ({ groom: 120, spa: 180, matted: 90, deshed: 75, haircut: 75, farm: 120, bath: 60 }[id] || 30); }, 0); }, 0))),
       address: this.vars.address, clinicPhone: this.vars.phone
     };
     s.bookings.push(bk);
     s.lastBooking = bk;
-    s.profile = { city: b.city, ownerName: b.ownerName, contact: b.contact, phone: b.phone, email: b.email };
+    s.profile = { ownerName: b.ownerName, contact: b.contact, phone: b.phone, email: b.email };
     var first = b.ownerName.split(' ')[0];
-    var petBits = b.pets.map(function (p) { return self.poss(p.name || ('your ' + p.label)) + ' ' + joinList(p.services.map(function (id) { return self.svc[id].name; })); });
-    var line = cap(joinList(petBits)) + (b.pets.length > 1 || b.pets[0].services.length > 1 ? ' are' : ' is') + ' booked for ' + fmtDate(fromIso(b.date)) + ' at ' + fmtTime(b.time);
-    var how = b.contact === 'both' ? 'we\'ll reach you at ' + b.phone + ' and ' + b.email
-      : b.contact === 'email' ? 'we\'ll email your confirmation to ' + b.email
-        : 'we\'ll call or text you at ' + b.phone;
-    var closing = 'Thank you, ' + first + '! 🐾 ' + line + ', and ' + how + '. Have a wonderful day! 😊';
+    var names = b.pets.map(function (p) { return p.name || ('your ' + p.label); });
+    var when = fmtDateLong(fromIso(b.date)) + ' at ' + fmtTime(b.time);
+    var closing = names.length === 1
+      ? 'Lovely to meet you and ' + names[0] + ', ' + first + '! Your booking is confirmed for ' + when + '. We can\'t wait to see you both. Take care, and have a wonderful day! 🐾'
+      : 'Lovely to meet you, ' + first + ', and ' + joinList(names) + ' too! Your booking is confirmed for ' + when + '. We can\'t wait to see you all. Take care, and have a wonderful day! 🐾';
     s.b = this.freshBooking();
     s.stage = 'after';
     return [
@@ -1698,65 +1736,73 @@
   };
 
   /* ---------- compose the single reply ---------- */
-  Engine.prototype.compose = function (R, A, small, stepBefore, offer) {
-    var s = this.state, b = s.b, self = this, parts = [], chips = null, out = [];
+  Engine.prototype.compose = function (R, A, small) {
+    var s = this.state, b = s.b, parts = [], chips = null, out = [];
     small = small || {};
 
     if (R.cancelBooking) {
       s.b = this.freshBooking();
-      return [this.msg(this.pick('cancelB', ['No problem, I\'ve cancelled that booking request. Is there anything else I can help you with?', 'All right, I\'ve cleared that booking. Anything else I can help with?']))];
+      return [this.msg(this.pick('cancelB', ['No problem, I\'ve cancelled that booking request. Anything else I can help with?', 'All right, I\'ve cleared that booking. Anything else I can help with?']))];
     }
 
     R.answers.forEach(function (a) { parts.push(a.text); });
     (R.acks || []).forEach(function (a) { parts.push(a); });
 
     if (b.active) {
-      var errField = R.errors.length ? R.errors[R.errors.length - 1].field : null;
+      var st = this.nextStep();
+      var unparsed = !R.answers.length && !R.recognized && !small.only && !small.greet && !small.thanks && !R.acks.length && !R.needGuess;
+      if (unparsed) {
+        if (this.gibberish(A.M)) return [this.msg(GIBBERISH)];
+        var words = A.M.trim().split(' ').length;
+        var asked = A.segs.some(function (sg) { return sg.isQ; });
+        if (A.segs.some(function (sg) { return sg.offtopic; }) || (asked && words > 2) || (words > 4 && !this.petish(A.M))) return [this.msg(OUT_OF_SCOPE)];
+        if (st.f !== 'confirm') {
+          var again = this.pick('again', ['Hmm, I didn\'t catch that.', 'Sorry, I missed that.', 'I\'m not sure I followed.']);
+          return [this.msg(again + ' ' + this.prompt(st), this.chipsFor(st) ? { chips: this.chipsFor(st) } : null)];
+        }
+      }
       var ack = this.ackFor(R);
-      if (!R.errors.length || R.changed.length) { if (ack && !(R.answers.length && ack === 'Got it.')) parts.push(ack); }
+      if (ack && !R.answers.length && (!R.errors.length || R.changed.length)) parts.push(ack);
       if (small.greet && !R.started && !R.answers.length && !this.anyGot(R.got)) parts.unshift('Hi again! 😊');
       if (small.thanks && !R.answers.length && !this.anyGot(R.got)) parts.unshift('You\'re welcome!');
       if (R.cleared) parts.push(this.pick('clr', ['Sure, let\'s change that.', 'No problem.']));
       R.errors.forEach(function (e) { parts.push(e.text); });
-      if (R.timeDropped) parts.push('Just a heads-up: ' + fmtTime(R.timeDropped.min) + ' isn\'t available on the new date' + (R.timeDropped.near && R.timeDropped.near.length ? ', but ' + joinList(R.timeDropped.near.map(fmtTime)) + ' are free.' : '.'));
+      if (R.timeDropped) parts.push(fmtTime(R.timeDropped.min) + ' isn\'t free on the new date' + (R.timeDropped.near && R.timeDropped.near.length ? ', but ' + joinList(R.timeDropped.near.map(fmtTime)) + ' are.' : '.'));
       if (R.taken) {
-        parts.push(fmtTime(R.taken.min) + ' is already booked ' + this.whenText(b.date).replace(/^on /, 'on ') + (R.taken.near.length ? ', but ' + joinList(R.taken.near.map(fmtTime), 'and') + ' ' + (R.taken.near.length > 1 ? 'are' : 'is') + ' free. Would ' + (R.taken.near.length > 1 ? 'either of those' : 'that') + ' work?' : '. Could you pick another time?'));
-        chips = this.timeChips(b.date, null).filter(function (c) { return true; });
+        parts.push(fmtTime(R.taken.min) + ' is already booked' + (R.taken.near.length ? ', but ' + joinList(R.taken.near.map(fmtTime), 'and') + ' ' + (R.taken.near.length > 1 ? 'are' : 'is') + ' free. Would ' + (R.taken.near.length > 1 ? 'either' : 'that') + ' work?' : '. Could you pick another time?'));
+        chips = this.timeChips(b.date, null);
       }
-      var st = this.nextStep();
-      var errOnStep = R.errors.some(function (e) { return e.field === st.f || (e.field === 'date' && st.f === 'date') || (e.field === 'time' && st.f === 'time'); });
+      var errOnStep = R.errors.some(function (e) { return e.field === st.f; });
       if (b.awaitingEdit && !this.anyGot(R.got) && !R.cleared) {
         if (!parts.length) parts.push('What would you like to change?');
       } else if (st.f === 'confirm') {
         b.told = true; b.summaryShown = true; b.awaitingEdit = false;
         var lead = parts.join(' ');
-        var sumQ = this.pick('pConfirm', R.changed.length ? ['Here\'s the updated summary. Does everything look right?'] : ['Here\'s your booking summary. Does everything look right?', 'Here\'s everything I have. Does it all look right?']);
-        if (lead.length > 60) out.push(this.msg(lead));
+        var sumQ = R.changed.length ? 'Here\'s the updated summary. Does everything look right?' : this.pick('pConfirm', ['Here\'s your booking summary. Does everything look right?', 'Here\'s everything I have. Does it all look right?']);
+        if (lead.length > 70) out.push(this.msg(lead));
         else if (lead) sumQ = lead + ' ' + sumQ;
         out.push(this.msg(sumQ, { card: this.summaryCard(), chips: [{ label: '✏️ Edit', value: 'Edit', kind: 'edit' }, { label: '✅ Confirm', value: 'Confirm', kind: 'confirm' }] }));
         return out;
       } else if (!R.taken && !errOnStep) {
-        if (!b.told && b.pets.length && b.pets.every(function (p) { return p.services.length; }) && b.history) {
-          parts.push(this.servicesText()); b.told = true;
-        }
         var pr = this.prompt(st);
-        if (R.answers.length && pr && !this.anyGot(R.got)) pr = this.pick('back', ['Now, back to your booking: ', 'Back to the booking: ', 'Now, ']) + lowerFirst(pr);
-        if (st.f === 'time' && R.got.date && !R.got.time) {
-          var free = this.freeSlots(b.date), fn = b.timePref ? this.timeChips(b.date, b.timePref).filter(function (c) { return !c.disabled; }) : null;
-          if (fn && fn.length && b.timePref) pr = cap(this.relDay(b.date)) + ' ' + b.timePref + ', I have ' + joinList(fn.slice(0, 3).map(function (c) { return c.label; })) + ' free. Which one suits you?';
+        if (!b.told && b.history && b.pets.length && b.pets.every(function (p) { return p.services.length; })) {
+          b.told = true;
+          if (!R.answers.length) parts = parts.filter(function (x) { return x !== ack; });
+          parts.push(this.servicesText());
         }
-        if (pr) pr = pr.replace(/(: |, )(first things first: |to get started, )/i, '$1');
+        if (st.f === 'time' && R.got.date && !R.got.time && b.timePref) {
+          var fn = this.timeChips(b.date, b.timePref).filter(function (c) { return !c.disabled; });
+          if (fn.length) pr = cap(this.relDay(b.date)) + ' ' + b.timePref + ', I have ' + joinList(fn.slice(0, 3).map(function (c) { return c.label; })) + ' free. Which suits you?';
+        }
+        if (R.answers.length && pr) {
+          var used = R.answers.reduce(function (n, a) { return n + sentences(a.text); }, 0);
+          if (used >= 2 || parts.length > R.answers.length) pr = shortQ(pr);
+          if (!this.anyGot(R.got) && !/^And /.test(pr)) pr = this.pick('back', ['Now, ', 'So, ']) + lowerFirst(pr);
+        }
         if (pr) parts.push(pr);
-        chips = this.chipsFor(st);
-      } else if (errOnStep && (st.f === 'date')) chips = this.dateChips();
-      else if (errOnStep && st.f === 'time' && b.date) chips = this.timeChips(b.date, b.timePref);
-      if (R.needGuess && parts.length) {
-        parts.splice(parts.length - (st.f === 'history' ? 1 : 1), 0, R.needGuess === 'checkup' ? 'No problem, our team will take a proper look on arrival, so I\'ll start with a General Checkup.' : 'Sounds like a pampering session! I\'ll pencil in Full Grooming.');
-      }
-      if (!R.answers.length && !R.recognized && !small.only && !small.greet && !small.thanks && !R.acks.length && !R.needGuess) {
-        if (this.gibberish(A.M)) return [this.msg(GIBBERISH)];
-        if (!this.petish(A.M)) return [this.msg(OUT_OF_SCOPE)];
-      }
+        chips = chips || this.chipsFor(st);
+      } else if (errOnStep) chips = this.chipsFor(st);
+      if (R.needGuess && parts.length) parts.splice(parts.length - 1, 0, R.needGuess === 'checkup' ? 'I\'ll start with a General Checkup so our vet can take a look.' : 'I\'ll pencil in Full Grooming.');
       if (!parts.length) parts.push(this.prompt(st));
       out.push(this.msg(parts.join(' ').replace(/\s+\n/g, '\n'), chips ? { chips: chips } : null));
       return out;
@@ -1764,24 +1810,25 @@
 
     // Not booking (yet)
     if (!parts.length) {
+      if (/^ (confirm|edit|confirm booking)( |$)/.test(A.M) && s.lastBooking) return [this.msg('Your booking is already confirmed! 🐾 Is there anything else I can help with?')];
       if (small.only || small.greet || small.thanks || small.bye) {
-        if (small.bye) return [this.msg(this.pick('bye0', ['Bye for now, and give your pet a cuddle from us! 🐾', 'Take care, and see you soon at {short}! 🐾']))];
-        if (small.thanks) return [this.msg(this.pick('ty0', ['You\'re very welcome! Is there anything else I can help with?', 'Happy to help! Anything else you\'d like to know?']))];
-        if (small.greet) return [this.msg(this.pick('hi0', ['Hello! 😊 I can help you book a grooming or vet visit, or answer any questions about {short}. What would you like to do?', 'Hi there! 🐾 Would you like to book a visit, or do you have a question about our services?']), { chips: this.quickChips() })];
-        if (small.yes) {
-          if (s.stage === 'after') { s.stage = 'chat'; return [this.msg('Of course! What else can I help you with?')]; }
-          return [this.msg('Lovely! Would you like to book a visit, or ask about our services and prices?', { chips: this.quickChips() })];
-        }
+        if (small.bye) return [this.msg(this.pick('bye0', ['Thank you, goodbye, see you soon! 🐶', 'Goodbye, and see you soon! 🐾']))];
+        if (small.thanks) return [this.msg(this.pick('ty0', ['You\'re very welcome! Anything else I can help with?', 'Happy to help! Anything else you\'d like to know?']))];
+        if (small.greet) return [this.msg(this.pick('hi0', ['Hello! 😊 How can I help you today?', 'Hi there! 🐾 Would you like to book an appointment or ask a question?']))];
+        if (small.yes) return [this.msg('Lovely! Would you like to book an appointment, or do you have a question?')];
         if (small.no) return [this.msg('No problem! I\'m here whenever you need me. 😊')];
       }
+      var toks = A.M.trim().split(' ');
+      if (toks.length <= 3 && this.cities.indexOf(A.M.trim()) >= 0) return [this.msg('Thanks! How can I help you today? I can book an appointment or answer questions about {short}.')];
       if (this.gibberish(A.M)) return [this.msg(GIBBERISH)];
       return [this.msg(OUT_OF_SCOPE)];
     }
     if (small.greet && !small.only) parts.unshift(this.pick('hiPre', ['Hi! 😊', 'Hello! 🐾']));
     if (R.offerCheckup && !s.pendingOffer) { parts.push(this.pick('ctaChk', ['Would you like me to book a checkup?', 'Shall I book a checkup for you?'])); s.pendingOffer = { kind: 'book', svc: 'checkup' }; out.push(this.msg(parts.join(' '))); return out; }
+    if (R.offerPickup && !s.pendingOffer) { s.pendingOffer = { kind: 'book', pickup: true }; }
     var priceAsk = A.segs.some(function (sg) { return sg.priceAsk; });
-    if (priceAsk && !s.ctaShown && s.stage !== 'after') {
-      parts.push(this.pick('cta', ['Would you like me to book a visit?', 'Shall I help you book a slot?']));
+    if (priceAsk && !s.ctaShown && s.stage !== 'after' && !R.offerPickup && !parts.some(function (p) { return /\?$/.test(p); })) {
+      parts.push(this.pick('cta', ['Would you like to book an appointment?', 'Shall I book a slot for you?']));
       s.ctaShown = true; s.pendingOffer = { kind: 'book' };
     }
     out.push(this.msg(parts.join(parts.some(function (p) { return /\n/.test(p); }) ? '\n' : ' ')));
@@ -1799,27 +1846,65 @@
     cal: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
   };
   var C = { line: '#F7EBD9', fill: '#2B1B12', pink: '#E8A6A0' };
-  function dogSvg(cls) {
-    return '<svg class="' + cls + '" viewBox="0 0 80 74" aria-hidden="true"><g fill="' + C.fill + '" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">' +
-      '<path d="M21 17Q8 14 6 32q-1 14 8 18 6-10 8-24z"/><path d="M59 17q13-3 15 15 1 14-8 18-6-10-8-24z"/>' +
-      '<path d="M22 22Q40 6 58 22q8 12 4 28-6 16-22 17-16-1-22-17-4-16 4-28z"/><ellipse cx="40" cy="53" rx="11" ry="8"/></g>' +
-      '<g fill="' + C.line + '"><circle cx="31" cy="38" r="3"/><circle cx="49" cy="38" r="3"/><ellipse cx="40" cy="48.5" rx="4.5" ry="3.2"/></g>' +
-      '<g fill="' + C.fill + '"><circle cx="32" cy="37" r="1"/><circle cx="50" cy="37" r="1"/></g>' +
-      '<path d="M38 57q2 6 4 0" fill="' + C.pink + '" stroke="' + C.line + '" stroke-width="1.2"/>' +
-      '<path d="M40 51.5V55m0 0q-3 4-6 1m6-1q3 4 6 1" fill="none" stroke="' + C.line + '" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+  /* Full-body puppy used as the typing indicator (warm, softly colored). */
+  function puppySvg() {
+    return '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+      '<ellipse cx="50" cy="95" rx="26" ry="3.5" fill="rgba(0,0,0,.25)"/>' +
+      '<g class="pup-tail"><path d="M68 76c9-1 15-7 16-16" fill="none" stroke="#C98B52" stroke-width="7" stroke-linecap="round"/></g>' +
+      '<ellipse cx="50" cy="74" rx="21" ry="19" fill="#E3A86B"/>' +
+      '<ellipse cx="50" cy="78" rx="11" ry="12.5" fill="#F7EBD9"/>' +
+      '<ellipse cx="34" cy="90" rx="10" ry="5.5" fill="#D9985A"/><ellipse cx="66" cy="90" rx="10" ry="5.5" fill="#D9985A"/>' +
+      '<ellipse cx="43.5" cy="91" rx="6" ry="4.6" fill="#F7EBD9"/><ellipse cx="56.5" cy="91" rx="6" ry="4.6" fill="#F7EBD9"/>' +
+      '<path d="M41.5 89.5v2.5M44 89v2.6M46 89.5v2.4M54 89.5v2.4M56.5 89v2.6M59 89.5v2.5" stroke="#C98B52" stroke-width="1" stroke-linecap="round"/>' +
+      '<path d="M34 58c8 6 24 6 32 0" fill="none" stroke="#8FB996" stroke-width="4.5" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="63.5" r="3.4" fill="#F0C58E" stroke="#C98B52" stroke-width="1"/>' +
+      '<path d="M31 25c-11 1-14 12-12 22 1 6 6 9 10 7 3-7 3-18 2-29z" fill="#A9683A"/>' +
+      '<path d="M69 25c11 1 14 12 12 22-1 6-6 9-10 7-3-7-3-18-2-29z" fill="#A9683A"/>' +
+      '<circle cx="50" cy="38" r="21" fill="#E3A86B"/>' +
+      '<ellipse cx="59" cy="31" rx="8" ry="7" fill="#D9985A" opacity=".7"/>' +
+      '<ellipse cx="50" cy="47" rx="11" ry="8.5" fill="#F7EBD9"/>' +
+      '<g class="pup-eyes"><ellipse cx="41" cy="35.5" rx="3" ry="3.6" fill="#3B2418"/><ellipse cx="59" cy="35.5" rx="3" ry="3.6" fill="#3B2418"/>' +
+      '<circle cx="42" cy="34.3" r="1" fill="#fff"/><circle cx="60" cy="34.3" r="1" fill="#fff"/></g>' +
+      '<ellipse cx="36" cy="44" rx="4" ry="2.4" fill="#F2A7A0" opacity=".75"/><ellipse cx="64" cy="44" rx="4" ry="2.4" fill="#F2A7A0" opacity=".75"/>' +
+      '<ellipse cx="50" cy="43.2" rx="4" ry="3" fill="#3B2418"/>' +
+      '<path d="M50 46v2.6m0 0c-1.6 2.6-4.4 2.6-5.8.8m5.8-.8c1.6 2.6 4.4 2.6 5.8.8" fill="none" stroke="#3B2418" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path d="M48 50.6c.5 3.6 3.5 3.6 4 0z" fill="#F29C9C"/>' +
+      '</svg>';
   }
-  function catSvg(cls) {
-    return '<svg class="' + cls + '" viewBox="0 0 80 70" aria-hidden="true"><g fill="' + C.fill + '" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">' +
-      '<path d="M14 30 12 6l20 14q8-3 16 0L68 6l-2 24q6 12 0 24-10 12-26 12T14 54q-6-12 0-24z"/></g>' +
-      '<path d="M17 13l4 9M63 13l-4 9" stroke="' + C.line + '" stroke-width="1.5" stroke-linecap="round"/>' +
-      '<g fill="' + C.line + '"><ellipse cx="30" cy="38" rx="3" ry="4"/><ellipse cx="50" cy="38" rx="3" ry="4"/></g>' +
-      '<g fill="' + C.fill + '"><circle cx="31" cy="36.5" r="1"/><circle cx="51" cy="36.5" r="1"/></g>' +
-      '<path d="M37 46h6l-3 3z" fill="' + C.pink + '" stroke="' + C.line + '" stroke-width="1.2" stroke-linejoin="round"/>' +
-      '<path d="M40 49q-3 4-6 2m6-2q3 4 6 2M28 47l-14-3m14 6-14 2m38-5 14-3m-14 6 14 2" fill="none" stroke="' + C.line + '" stroke-width="1.4" stroke-linecap="round"/></svg>';
+
+  /* Four small line-art pets for the corners of the chat window. */
+  var LINE = 'fill="' + C.fill + '" stroke="' + C.line + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  function sleepyCatSvg() { // top-left: a cat napping on the edge
+    return '<svg viewBox="0 0 72 40" aria-hidden="true"><path d="M60 30c9 6-3 11-15 8" fill="none" stroke="' + C.line + '" stroke-width="2" stroke-linecap="round"/>' +
+      '<ellipse cx="40" cy="27" rx="24" ry="12" ' + LINE + '/>' +
+      '<path d="M8 22c0-7 5-11 10-11 6 0 10 4 10 11 0 6-4 9-10 9S8 28 8 22z" ' + LINE + '/>' +
+      '<path d="M10 15 9 6l6 6M21 12l5-6 1 9" ' + LINE + '/>' +
+      '<path d="M11.5 22c1.5 1.6 3 1.6 4.5 0M19.5 22c1.5 1.6 3 1.6 4.5 0" fill="none" stroke="' + C.line + '" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<text x="30" y="11" fill="' + C.line + '" font-size="8" font-family="Nunito,sans-serif" opacity=".7">z</text><text x="36" y="6" fill="' + C.line + '" font-size="6" font-family="Nunito,sans-serif" opacity=".55">z</text></svg>';
   }
-  function pawsSvg(cls) {
-    return '<svg class="' + cls + '" viewBox="0 0 44 16" aria-hidden="true"><g fill="' + C.fill + '" stroke="' + C.line + '" stroke-width="2"><ellipse cx="10" cy="9" rx="8" ry="6"/><ellipse cx="34" cy="9" rx="8" ry="6"/></g>' +
-      '<path d="M7 6v3M10 5v3M13 6v3M31 6v3M34 5v3M37 6v3" stroke="' + C.line + '" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  function peekDogSvg() { // top-right: a puppy peeking over the edge
+    return '<svg viewBox="0 0 64 50" aria-hidden="true"><path d="M17 14C7 13 4 24 6 32c1 5 5 7 8 5 2-8 3-15 3-23z" ' + LINE + '/><path d="M47 14c10-1 13 10 11 18-1 5-5 7-8 5-2-8-3-15-3-23z" ' + LINE + '/>' +
+      '<path d="M16 50V28c0-12 7-20 16-20s16 8 16 20v22" ' + LINE + '/>' +
+      '<ellipse cx="32" cy="38" rx="8" ry="6" ' + LINE + '/><circle cx="25" cy="27" r="2.2" fill="' + C.line + '"/><circle cx="39" cy="27" r="2.2" fill="' + C.line + '"/>' +
+      '<ellipse cx="32" cy="34.5" rx="3.2" ry="2.3" fill="' + C.line + '"/><path d="M32 37v2m0 0c-1.5 2-3.5 2-4.5.5m4.5-.5c1.5 2 3.5 2 4.5.5" fill="none" stroke="' + C.line + '" stroke-width="1.4" stroke-linecap="round"/>' +
+      '<ellipse cx="18" cy="47" rx="7" ry="4" ' + LINE + '/><ellipse cx="46" cy="47" rx="7" ry="4" ' + LINE + '/></svg>';
+  }
+  function sittingCatSvg() { // bottom-left: a cat sitting beside the window
+    return '<svg viewBox="0 0 48 64" aria-hidden="true"><path d="M33 58c10 1 14-6 11-13" fill="none" stroke="' + C.line + '" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="M12 60c-4-9-3-20 4-27h16c7 7 8 18 4 27z" ' + LINE + '/>' +
+      '<path d="M11 21 10 6l8 7h12l8-7-1 15c2 8-4 14-13 14S9 29 11 21z" ' + LINE + '/>' +
+      '<ellipse cx="18.5" cy="21" rx="1.8" ry="2.4" fill="' + C.line + '"/><ellipse cx="29.5" cy="21" rx="1.8" ry="2.4" fill="' + C.line + '"/>' +
+      '<path d="M22.5 26h3l-1.5 1.6z" fill="' + C.pink + '"/><path d="M17 27l-7-1M17 29l-7 1.5M31 27l7-1M31 29l7 1.5" stroke="' + C.line + '" stroke-width="1.1" stroke-linecap="round"/>' +
+      '<path d="M20 50v10M28 50v10" stroke="' + C.line + '" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  }
+  function sittingDogSvg() { // bottom-right: a little dog sitting and wagging
+    return '<svg viewBox="0 0 50 64" aria-hidden="true"><g class="c-wag"><path d="M37 54c8-1 11-7 10-13" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linecap="round"/></g>' +
+      '<path d="M14 61c-3-10-2-19 3-25h16c5 6 6 15 3 25z" ' + LINE + '/>' +
+      '<path d="M14 9C6 9 4 19 6 25c1 4 4 5 7 3 1-6 2-12 1-19zM36 9c8 0 10 10 8 16-1 4-4 5-7 3-1-6-2-12-1-19z" ' + LINE + '/>' +
+      '<circle cx="25" cy="20" r="12" ' + LINE + '/><ellipse cx="25" cy="26" rx="6" ry="4.5" ' + LINE + '/>' +
+      '<circle cx="20.5" cy="18" r="1.8" fill="' + C.line + '"/><circle cx="29.5" cy="18" r="1.8" fill="' + C.line + '"/><ellipse cx="25" cy="23.6" rx="2.4" ry="1.7" fill="' + C.line + '"/>' +
+      '<path d="M21 49v12M29 49v12" stroke="' + C.line + '" stroke-width="1.6" stroke-linecap="round"/></svg>';
   }
 
   var CSS = [
@@ -1837,24 +1922,24 @@
     '.launcher:hover .tip,.launcher.tip-on .tip{opacity:1;transform:translateY(-50%) translateX(0)}',
     '.pc.open .launcher .tip{display:none}',
     /* panel */
-    '.panel{position:fixed;right:24px;bottom:100px;width:380px;height:min(640px,calc(100vh - 150px));z-index:2147483001;opacity:0;transform:translateY(16px) scale(.97);transform-origin:bottom right;pointer-events:none;transition:opacity .28s ease,transform .28s ease}',
+    '.panel{position:fixed;right:40px;bottom:100px;width:380px;height:min(640px,calc(100vh - 150px));z-index:2147483001;opacity:0;transform:translateY(16px) scale(.97);transform-origin:bottom right;pointer-events:none;transition:opacity .28s ease,transform .28s ease}',
     '.pc.open .panel{opacity:1;transform:none;pointer-events:auto}',
     '.card{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;background:var(--bg);border:1px solid rgba(247,235,217,.14);border-radius:24px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}',
-    '.peek{position:absolute;z-index:1;pointer-events:none;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}',
-    '.peek svg{display:block;width:100%;height:100%}',
-    '.peek-top{width:64px;height:56px;top:-40px;right:70px;transform:translateY(14px)}',
-    '.peek-left{width:62px;height:58px;left:-42px;top:40%;transform:translateX(26px) rotate(-8deg)}',
-    '.peek-right{width:58px;height:51px;right:-40px;top:63%;transform:translateX(-26px) rotate(8deg)}',
-    '.pc.open .peek-top{transform:none}.pc.open .peek-left{transform:rotate(-8deg)}.pc.open .peek-right{transform:rotate(8deg)}',
-    '.peek-left svg{animation:peekL 6s ease-in-out infinite}.peek-right svg{animation:peekR 7s ease-in-out 1s infinite}',
-    '@keyframes peekL{0%,80%,100%{transform:none}86%{transform:translateX(-4px) rotate(-5deg)}93%{transform:translateX(-2px) rotate(3deg)}}',
-    '@keyframes peekR{0%,80%,100%{transform:none}86%{transform:translateX(4px) rotate(5deg)}93%{transform:translateX(2px) rotate(-3deg)}}',
-    '.paws{position:absolute;z-index:3;pointer-events:none;width:40px;height:15px}',
-    '.paws-top{top:-8px;right:82px}',
-    '.paws-left{left:-16px;top:calc(40% + 46px);width:34px;height:13px}',
-    '.paws-right{right:-16px;top:calc(63% + 40px);width:34px;height:13px}',
-    '.peek-top svg{animation:peekbob 5s ease-in-out infinite}',
+    '.corner{position:absolute;z-index:1;pointer-events:none;opacity:0;transition:opacity .4s ease .15s,transform .5s cubic-bezier(.34,1.56,.64,1)}',
+    '.pc.open .corner{opacity:1}',
+    '.corner svg{display:block;width:100%;height:100%;overflow:visible}',
+    '.c-tl{width:60px;height:34px;top:-31px;left:28px;transform:translateY(10px)}',
+    '.c-tr{width:54px;height:42px;top:-36px;right:34px;transform:translateY(14px);z-index:3}',
+    '.c-bl{width:38px;height:50px;left:-31px;bottom:84px;transform:translateX(12px)}',
+    '.c-br{width:40px;height:52px;right:-32px;bottom:120px;transform:translateX(-12px)}',
+    '.pc.open .c-tl,.pc.open .c-tr,.pc.open .c-bl,.pc.open .c-br{transform:none}',
+    '.c-tl svg{animation:breathe 3.6s ease-in-out infinite;transform-origin:50% 100%}',
+    '.c-tr svg{animation:peekbob 5s ease-in-out infinite}',
+    '.c-bl svg{animation:peekbob 6.5s ease-in-out 1.2s infinite}',
+    '.c-wag{transform-box:fill-box;transform-origin:0 100%;animation:wag .5s ease-in-out infinite alternate}',
+    '@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.06)}}',
     '@keyframes peekbob{0%,85%,100%{transform:translateY(0)}90%{transform:translateY(-3px) rotate(-4deg)}95%{transform:translateY(-1px) rotate(3deg)}}',
+    '@keyframes wag{from{transform:rotate(-10deg)}to{transform:rotate(14deg)}}',
     /* header */
     'header{position:relative;display:flex;align-items:center;gap:12px;padding:14px 12px 14px 16px;background:linear-gradient(180deg,var(--bg3),var(--bg2));border-bottom:1px solid rgba(247,235,217,.12)}',
     '.avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;background:var(--cream);color:var(--ink);display:grid;place-items:center;box-shadow:0 0 0 3px rgba(247,235,217,.15)}',
@@ -1866,38 +1951,45 @@
     '.hbtn{min-width:44px;height:44px;border-radius:14px;border:1px solid rgba(247,235,217,.18);background:rgba(247,235,217,.06);color:var(--cream);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:13px;font-weight:400;padding:0 10px;transition:background .2s}',
     '.hbtn:hover{background:rgba(247,235,217,.14)}',
     '.hbtn svg{width:18px;height:18px}',
-    '.hdog{display:none}',
     /* messages */
     '.msgs{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 14px 10px;scroll-behavior:smooth;background:radial-gradient(120% 60% at 50% 0%,rgba(247,235,217,.05),transparent 60%)}',
     '.msgs::-webkit-scrollbar{width:6px}.msgs::-webkit-scrollbar-thumb{background:rgba(247,235,217,.18);border-radius:6px}',
     '.row{display:flex;flex-direction:column;margin:0 0 12px;max-width:100%}',
     '.row.user{align-items:flex-end}',
     '.row.bot{align-items:flex-start}',
-    '.bubble{max-width:84%;padding:10px 14px;font-size:15px;line-height:1.48;border-radius:18px;word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-line;animation:fadeIn .32s ease both}',
+    '.bubble{max-width:84%;padding:10px 14px;font-size:15px;font-weight:400;line-height:1.5;border-radius:18px;word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-line;animation:fadeIn .32s ease both}',
     '.bot .bubble{background:var(--cream);color:var(--ink);border:1px solid var(--border);border-bottom-left-radius:4px}',
     '.user .bubble{background:linear-gradient(135deg,var(--caramel1),var(--caramel2));color:var(--ink);border-bottom-right-radius:4px;font-weight:400}',
-    '.bot .bubble.pop{animation:popOut .5s cubic-bezier(.34,1.56,.64,1) both;transform-origin:0 0}',
     '@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
-    '@keyframes popOut{0%{opacity:0;transform:scale(.25) translate(-12px,-16px)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:none}}',
+    '@keyframes popOut{0%{opacity:0;transform:scale(.2) translate(-10px,30px)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:none}}',
     '.meta{font-size:11px;color:var(--muted);margin:4px 6px 0;display:flex;gap:8px;align-items:center}',
     '.seen{color:#B9DDB5;letter-spacing:-1px}.seen span{letter-spacing:0;margin-left:3px}',
     /* typing pet */
-    '.typing{display:flex;align-items:flex-end;gap:8px;margin:0 0 12px;height:44px}',
-    '.tpet{width:38px;height:36px;transform-origin:50% 90%;animation:wiggle .55s ease-in-out infinite alternate}',
-    '.tpet svg{width:100%;height:100%;display:block}',
-    '.tlabel{font-size:12px;color:var(--muted);margin-bottom:4px}',
-    '@keyframes wiggle{from{transform:rotate(-12deg) translateY(0)}to{transform:rotate(12deg) translateY(-3px)}}',
-    '.typing.grow .tpet{animation:grow .42s cubic-bezier(.34,1.56,.64,1) forwards}',
-    '.typing.grow .tlabel{opacity:0;transition:opacity .2s}',
-    '@keyframes grow{0%{transform:scale(1)}70%{transform:scale(1.9) translateY(-6px)}100%{transform:scale(1.65) translateY(-4px)}}',
+    '.typing{display:flex;align-items:flex-end;gap:8px;margin:0 0 12px;height:52px;overflow:visible}',
+    '.tpet{width:46px;height:46px;transform-origin:20% 95%}',
+    '.tpet svg{width:100%;height:100%;display:block;overflow:visible;animation:hop .9s ease-in-out infinite}',
+    '.pup-eyes{transform-box:fill-box;transform-origin:center;animation:blink 3.2s infinite}',
+    '.pup-tail{transform-box:fill-box;transform-origin:0% 100%;animation:wag .32s ease-in-out infinite alternate}',
+    '.tlabel{font-size:12.5px;color:var(--muted);margin-bottom:6px}',
+    '@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}',
+    '@keyframes blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}',
+    '.typing.grow .tpet{animation:grow .48s cubic-bezier(.34,1.56,.64,1) forwards}',
+    '.typing.grow .tpet svg{animation:none}',
+    '.typing.grow .tlabel{opacity:0;transition:opacity .15s}',
+    '@keyframes grow{0%{transform:scale(1)}65%{transform:scale(2.15)}100%{transform:scale(1.9)}}',
+    '.bot .bubble.pop{animation:popOut .5s cubic-bezier(.34,1.56,.64,1) both;transform-origin:0 100%}',
     /* chips */
     '.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;max-width:100%}',
-    '.chip{min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid rgba(247,235,217,.38);background:rgba(247,235,217,.07);color:var(--cream);font-size:14px;font-weight:400;cursor:pointer;transition:background .2s,transform .15s,border-color .2s;animation:fadeIn .35s ease both}',
-    '.chip:hover:not(:disabled){background:rgba(247,235,217,.16);border-color:var(--cream)}',
-    '.chip:active:not(:disabled){transform:scale(.96)}',
-    '.chip:disabled{opacity:.42;cursor:default;text-decoration:line-through}',
-    '.chips.done .chip:not(.picked){opacity:.35;pointer-events:none}',
+    '.chip,.qbtn{min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid rgba(247,235,217,.38);background:rgba(247,235,217,.07);color:var(--cream);font-size:14px;font-weight:400;cursor:pointer;white-space:nowrap;transition:transform .18s ease,box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease;-webkit-tap-highlight-color:transparent}',
+    '.chip{animation:fadeIn .35s ease both}',
+    '.chip:hover:not(:disabled),.qbtn:hover{transform:translateY(-2px);background:rgba(240,197,142,.2);border-color:var(--caramel1);color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.28),0 0 14px rgba(240,197,142,.35)}',
+    '.chip:active:not(:disabled),.qbtn:active,.qbtn.tap{transform:translateY(0) scale(.94);background:rgba(240,197,142,.35);box-shadow:0 0 0 3px rgba(240,197,142,.25)}',
+    '.chip:focus-visible,.qbtn:focus-visible{outline:2px solid var(--caramel1);outline-offset:2px}',
+    '.chip:disabled{opacity:.42;cursor:not-allowed;text-decoration:line-through}',
     '.chip.picked{background:rgba(240,197,142,.25);border-color:var(--caramel1)}',
+    '.qr{display:flex;gap:8px;padding:10px 12px 2px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;background:var(--bg2);border-top:1px solid rgba(247,235,217,.1);scroll-behavior:smooth;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}',
+    '.qr::-webkit-scrollbar{display:none}',
+    '.qbtn{flex:0 0 auto;min-height:38px;padding:7px 13px;font-size:13.5px}',
     /* summary card */
     '.sum{width:min(100%,330px);margin-top:8px;background:var(--cream);color:var(--ink);border:1px solid var(--border);border-radius:18px;padding:14px 14px 12px;animation:popOut .5s cubic-bezier(.34,1.56,.64,1) both;transform-origin:0 0}',
     '.sum h3{margin:0 0 8px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}',
@@ -1914,13 +2006,14 @@
     '.sbtns{display:flex;gap:8px;margin-top:12px}',
     '.sbtn{flex:1;min-height:44px;border-radius:14px;font-size:15px;font-weight:400;cursor:pointer;border:1px solid var(--ink);background:transparent;color:var(--ink);transition:transform .15s,box-shadow .2s}',
     '.sbtn.ok{border:0;background:linear-gradient(135deg,var(--caramel1),var(--caramel2));box-shadow:0 4px 12px rgba(212,146,90,.35)}',
-    '.sbtn:hover:not(:disabled){transform:translateY(-1px)}',
+    '.sbtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 14px rgba(43,27,18,.25)}',
+    '.sbtn:active:not(:disabled){transform:scale(.96)}',
     '.sbtn:disabled{opacity:.45;cursor:default}',
     '.calbtn{margin-top:9px;min-height:44px;display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;border:1px solid var(--caramel1);background:rgba(240,197,142,.12);color:var(--cream);font-size:14px;font-weight:400;cursor:pointer;animation:fadeIn .4s ease both}',
     '.calbtn:hover{background:rgba(240,197,142,.25)}',
     '.calbtn svg{width:18px;height:18px}',
     /* composer */
-    'form{display:flex;gap:10px;align-items:center;padding:10px 12px 12px;border-top:1px solid rgba(247,235,217,.1);background:var(--bg2)}',
+    'form{display:flex;gap:10px;align-items:center;padding:8px 12px 12px;background:var(--bg2)}',
     'input{flex:1;min-width:0;height:48px;border-radius:999px;border:1px solid rgba(247,235,217,.22);background:rgba(247,235,217,.07);color:var(--cream);font-family:inherit;font-weight:300;font-size:16px;padding:0 18px;outline:none;transition:border-color .2s,box-shadow .2s}',
     'input::placeholder{color:rgba(247,235,217,.5)}',
     'input:focus{border-color:var(--caramel1);box-shadow:0 0 0 3px rgba(240,197,142,.18)}',
@@ -1936,9 +2029,8 @@
     '.panel{right:0;bottom:0;left:0;top:0;width:100%;height:var(--vvh,100%);transform:translateY(24px);transform-origin:bottom center}',
     '.pc.open .panel{transform:translateY(var(--vvt,0px))}',
     '.card{border-radius:0;border:0}',
-    '.peek,.paws{display:none}',
-    '.hdog{display:block;position:absolute;right:120px;bottom:-1px;width:40px;height:30px;overflow:hidden;pointer-events:none}',
-    '.hdog svg{width:40px;height:37px}',
+    '.corner{display:none}',
+    '.qbtn{min-height:44px}',
     '.pc.open .launcher{display:none}',
     '.launcher{right:16px;bottom:16px}',
     '.chip{min-height:44px}',
@@ -2005,21 +2097,31 @@
       '<div class="pc">' +
       '<button class="launcher" type="button" aria-label="Open chat with ' + escHtml(biz.name) + '">' + ICONS.paw + '<span class="tip">Need help? Chat with us! 🐾</span></button>' +
       '<section class="panel" role="dialog" aria-label="' + escHtml(biz.name) + ' chat">' +
-      '<div class="peek peek-top">' + catSvg('') + '</div><div class="paws paws-top">' + pawsSvg('') + '</div>' +
-      '<div class="peek peek-left">' + dogSvg('') + '</div><div class="paws paws-left">' + pawsSvg('') + '</div>' +
-      '<div class="peek peek-right">' + catSvg('') + '</div><div class="paws paws-right">' + pawsSvg('') + '</div>' +
+      '<div class="corner c-tl">' + sleepyCatSvg() + '</div><div class="corner c-tr">' + peekDogSvg() + '</div>' +
+      '<div class="corner c-bl">' + sittingCatSvg() + '</div><div class="corner c-br">' + sittingDogSvg() + '</div>' +
       '<div class="card">' +
       '<header><div class="avatar">' + ICONS.paw + '</div><div class="who"><h2>' + escHtml(biz.name) + '</h2><p><span class="dot"></span>Online · here to help</p></div>' +
-      '<div class="hdog">' + dogSvg('') + '</div>' +
       '<button class="hbtn newchat" type="button" aria-label="Start new chat" title="Start new chat">' + ICONS.refresh + '<span class="newtxt">New chat</span></button>' +
       '<button class="hbtn closebtn" type="button" aria-label="Close chat">' + ICONS.close + '</button></header>' +
       '<div class="msgs" role="log" aria-live="polite"></div>' +
+      '<div class="qr" role="toolbar" aria-label="Quick questions">' + this.engine.quickChips().map(function (q) { return '<button type="button" class="qbtn" data-send="' + escHtml(q.value) + '">' + escHtml(q.label) + '</button>'; }).join('') + '</div>' +
       '<form autocomplete="off"><label class="sr-only" for="pc-input">Message</label><input id="pc-input" type="text" enterkeyhint="send" placeholder="Type your message…" maxlength="600"/>' +
       '<button class="send" type="submit" aria-label="Send">' + ICONS.plane + '</button></form>' +
       '</div></section></div>';
     var $ = function (sel) { return rootEl.querySelector(sel); };
     this.el = { pc: $('.pc'), launcher: $('.launcher'), panel: $('.panel'), msgs: $('.msgs'), form: $('form'), input: $('input'), send: $('.send') };
     this.el.launcher.addEventListener('click', function () { self.toggle(); });
+    rootEl.querySelector('.card').addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('[data-send]');
+      if (!btn || btn.disabled) return;
+      btn.classList.remove('tap'); void btn.offsetWidth; btn.classList.add('tap');
+      setTimeout(function () { btn.classList.remove('tap'); }, 220);
+      if (btn.classList.contains('chip')) btn.classList.add('picked');
+      if (btn.getAttribute('data-kind') === 'confirm') { var sib = btn.parentNode.querySelectorAll('button'); for (var i = 0; i < sib.length; i++) sib[i].disabled = true; }
+      self.sendChip(btn.getAttribute('data-send'));
+    });
+    var qr = rootEl.querySelector('.qr');
+    qr.addEventListener('wheel', function (e) { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { qr.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
     $('.closebtn').addEventListener('click', function () { self.close(); });
     $('.newchat').addEventListener('click', function () { self.newChat(); });
     this.el.form.addEventListener('submit', function (e) { e.preventDefault(); self.sendTyped(); });
@@ -2109,12 +2211,6 @@
     if (instant) { var b = m.style.scrollBehavior; m.style.scrollBehavior = 'auto'; m.scrollTop = m.scrollHeight; m.style.scrollBehavior = b; }
     else m.scrollTop = m.scrollHeight;
   };
-  Widget.prototype.disableOldChips = function () {
-    var groups = this.el.msgs.querySelectorAll('.chips:not(.done)');
-    for (var i = 0; i < groups.length; i++) groups[i].classList.add('done');
-    var sb = this.el.msgs.querySelectorAll('.sbtn');
-    for (var j = 0; j < sb.length; j++) sb[j].disabled = true;
-  };
 
   Widget.prototype.addUser = function (text, ts, restoring) {
     ts = ts || Date.now();
@@ -2123,7 +2219,6 @@
     row.innerHTML = '<div class="bubble">' + escHtml(text) + '</div><div class="meta"><span>' + fmtClock(ts) + '</span><span class="seen" title="Seen">✓✓<span>Seen</span></span></div>';
     this.el.msgs.appendChild(row);
     this.msgs.push({ from: 'user', text: text, ts: ts });
-    if (!restoring) this.disableOldChips();
     this.scrollDown(restoring);
   };
 
@@ -2136,12 +2231,12 @@
     if (m.card) row.appendChild(this.renderCard(m.card, m.chips, stale));
     else if (m.chips && m.chips.length) {
       var wrap = document.createElement('div');
-      wrap.className = 'chips' + (stale ? ' done' : '');
+      wrap.className = 'chips';
       m.chips.forEach(function (c) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'chip'; b.textContent = c.label;
-        if (c.disabled) { b.disabled = true; b.title = c.note || 'Not available'; b.setAttribute('aria-label', c.label + ' (booked)'); }
-        b.addEventListener('click', function () { if (wrap.classList.contains('done')) return; b.classList.add('picked'); self.sendChip(c.value || c.label); });
+        b.setAttribute('data-send', c.value || c.label);
+        if (c.disabled) { b.disabled = true; b.title = c.note || 'Already booked'; b.setAttribute('aria-label', c.label + ' (booked)'); }
         wrap.appendChild(b);
       });
       row.appendChild(wrap);
@@ -2176,11 +2271,8 @@
     var btns = el.querySelector('.sbtns');
     (chips || []).forEach(function (c) {
       var b = document.createElement('button');
-      b.type = 'button'; b.className = 'sbtn' + (c.kind === 'confirm' ? ' ok' : ''); b.textContent = c.label; b.disabled = !!stale;
-      b.addEventListener('click', function () {
-        var all = btns.querySelectorAll('button'); for (var i = 0; i < all.length; i++) all[i].disabled = true;
-        self.sendChip(c.value);
-      });
+      b.type = 'button'; b.className = 'sbtn' + (c.kind === 'confirm' ? ' ok' : ''); b.textContent = c.label;
+      b.setAttribute('data-send', c.value); b.setAttribute('data-kind', c.kind || '');
       btns.appendChild(b);
     });
     return el;
@@ -2266,8 +2358,8 @@
       var dur = i === 0 ? Math.min(2300, 800 + (m.text || '').length * 9) : 900;
       var t = this.showTyping(i);
       await sleep(dur);
-      t.classList.add('grow');                 // the pet grows with a bounce…
-      await sleep(400);
+      t.classList.add('grow');                 // the puppy grows big with a bounce…
+      await sleep(480);
       t.remove();
       this.addBot(m, true);                     // …and the message pops out of it
       this.save();
@@ -2279,8 +2371,7 @@
   Widget.prototype.showTyping = function (i) {
     var row = document.createElement('div');
     row.className = 'typing';
-    var useCat = (this.msgs.length + i) % 2 === 1;
-    row.innerHTML = '<div class="tpet">' + (useCat ? catSvg('') : dogSvg('')) + '</div><span class="tlabel">' + (useCat ? 'purr-fecting a reply…' : 'fetching a reply…') + '</span>';
+    row.innerHTML = '<div class="tpet">' + puppySvg() + '</div><span class="tlabel">' + escHtml(this.cfg.business.shortName || 'We') + ' is typing…</span>';
     this.el.msgs.appendChild(row);
     this.scrollDown();
     return row;
